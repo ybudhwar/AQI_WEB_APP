@@ -27,5 +27,8 @@ cp .env.sample .env
 ### Run the server
 - Run the following command
 ```sh
-node app.js
+yarn start
 ```
+
+## Usage
+- On your browser visit this url http://localhost:8000/
