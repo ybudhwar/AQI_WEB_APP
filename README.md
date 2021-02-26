@@ -38,3 +38,20 @@ yarn start
 ## Usage
 
 - On your browser visit this url http://localhost:8000/
+
+## Additional Development Instructions
+
+- After installing dependencies check whether the pre-commit hook is configured.  
+  Check if `husky.sh` exist in `.git/hooks/` directory
+
+- If not, delete the node_modules directory
+
+```sh
+rm -rf node_modules
+```
+
+- Then reinstall packages
+
+```sh
+yarn install
+```
