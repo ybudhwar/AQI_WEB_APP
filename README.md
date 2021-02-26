@@ -39,6 +39,9 @@ yarn start
 
 - On your browser visit this url http://localhost:8000/
 
+- To get realtime pollution Data from different zones of city, visit http://localhost:8000/aqi/id  
+  where id is a number between 0-7
+
 ## Additional Development Instructions
 
 - After installing dependencies check whether the pre-commit hook is configured.  
