@@ -12,14 +12,17 @@ function getTravelData(req, res) {
   let p = axios.get(API_URL, {
     params: {
       apiKey: process.env.api_key,
-      alternatives: 0,
+      alternatives: 10,
       destination: dest,
       origin: origin,
     },
   });
   p.then((response) => {
-    let result = formatData(response.data.routes[0]);
-    res.send(result);
+    let result = [];
+    for (var i = 0; i <= response.data.routes.length; i++) {
+      result[i] = formatData(response.data.routes[i]);
+      res.send(result);
+    }
   }).catch((error) => {
     if (error.response) {
       if (error.response.status == 400) {
@@ -49,7 +52,7 @@ function formatData(route) {
   let arrivalPlace = route.sections[route.sections.length - 1].arrival.place;
   let startTime = route.sections[0].departure.time;
   let endTime = route.sections[route.sections.length - 1].arrival.time;
-  let timeTravelled = moment
+  let travelTime = moment
     .duration(
       moment(endTime, "YYYY/MM/DD HH:mm").diff(
         moment(startTime, "YYYY/MM/DD HH:mm")
@@ -58,7 +61,7 @@ function formatData(route) {
     .asSeconds();
   //In seconds
   return {
-    timeTravelled,
+    travelTime,
     departurePlace,
     arrivalPlace,
   };
