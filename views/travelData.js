@@ -21,8 +21,8 @@ function getTravelData(req, res) {
     let result = [];
     for (var i = 0; i <= response.data.routes.length; i++) {
       result[i] = formatData(response.data.routes[i]);
-      res.send(result);
     }
+    res.send(result);
   }).catch((error) => {
     if (error.response) {
       if (error.response.status == 400) {
