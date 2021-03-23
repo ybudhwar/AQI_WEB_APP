@@ -19,8 +19,8 @@ function getTravelData(req, res) {
   });
   p.then((response) => {
     let result = [];
-    for (var i = 0; i <= response.data.routes.length; i++) {
-      result[i] = formatData(response.data.routes[i]);
+    for (var i = 0; i < response.data.routes.length; i++) {
+      result = [...result, formatData(response.data.routes[i])];
     }
     res.send(result);
   }).catch((error) => {

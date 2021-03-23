@@ -12,7 +12,6 @@ exports.getPollutionData = async (req, res) => {
   const metroCities = cities.metroCities;
   let id = 0;
   try {
-    if (!isNaN(id)) throw Error;
     id = parseInt(req.params.id);
   } catch (err) {
     id = 0;
