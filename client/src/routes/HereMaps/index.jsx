@@ -1,14 +1,30 @@
+import { BASE_URL } from "helpers/config";
 import React, { useEffect } from "react";
 import styles from "./HereMaps.module.scss";
 import LOCATIONS from "./locations";
 
 const HereMaps = () => {
-  const addMarkersToMap = (map, locations=[]) => {
-    locations.forEach((location)=>{
+  const addMarkersToMap = (map, locations = []) => {
+    locations.forEach((location) => {
       const locationMarker = new window.H.map.Marker(location);
       map.addObject(locationMarker);
-    })
-  }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+    });
+  };
+
+  const addPolylineToMap = (map, locations = [], lineWidth = 1, color) => {
+    let lineString = new window.H.geo.LineString();
+    locations.forEach((loc) => {
+      lineString.pushPoint(loc);
+    });
+    map.addObject(
+      new window.H.map.Polyline(lineString, { style: { lineWidth: lineWidth+2 , strokeColor:'black'} })
+    ); // add border to the polyline
+    map.addObject(
+      new window.H.map.Polyline(lineString, { style: { lineWidth: lineWidth , strokeColor:color} })
+    );
+  };
+
+  
 
   useEffect(() => {
     const apikey = process.env.REACT_APP_HERE_API_KEY;
@@ -31,9 +47,31 @@ const HereMaps = () => {
       new window.H.mapevents.MapEvents(map)
     );
 
-    console.log(behavior)
+    console.log(behavior);
 
-    addMarkersToMap(map,[LOCATIONS.delhi])
+    const fetchAndAddRoutes = (map) => {
+      const origin = LOCATIONS.rajivChowk;
+      const dest = LOCATIONS.botanicalGarden;
+      
+      addMarkersToMap(map,[origin, dest]) // plot origin and destination on map
+  
+      const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng}&dest=${dest.lat},${dest.lng}`;
+      fetch(url)
+        .then((res) => res.json())
+        .then((routes) => {
+          routes.forEach(route => {
+            route.forEach(section => {
+              const line = [section.begin, section.end];
+              addPolylineToMap(map,line, 5, section.color)
+            })
+          })
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    };
+    
+    fetchAndAddRoutes(map);
 
     return () => {
       window.removeEventListener("resize", map.getViewPort().resize);

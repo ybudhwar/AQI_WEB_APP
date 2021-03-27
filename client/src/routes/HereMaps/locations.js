@@ -7,7 +7,14 @@ const LOCATIONS = {
         lat: 52.496, 
         lng: 13.382 
     },
-    
+    rajivChowk : {
+        lat: 28.6330,
+        lng: 77.2194
+    },
+    botanicalGarden:{
+        lat: 28.5640,
+        lng: 77.3343
+    },
 }
 
 export default LOCATIONS;
