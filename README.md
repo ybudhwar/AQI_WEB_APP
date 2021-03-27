@@ -11,36 +11,9 @@ An API service to calculate various travel cost parameters between two locations
 - Install [Node.js](https://nodejs.dev/learn/how-to-install-nodejs)
 - Install [Yarn](https://classic.yarnpkg.com/en/docs/install)
 
-### Install Dependencies
+### Setup react and express app
 
-- In the terminal run the following command
-
-```sh
-yarn install
-```
-
-### Configuring the App
-
-- Create a file named as `.env` with same contents as file `.env.sample`
-
-```sh
-cp .env.sample .env
-```
-
-### Run the server
-
-- Run the following command
-
-```sh
-yarn start
-```
-
-## Usage
-
-- On your browser visit this url http://localhost:8000/
-
-- To get realtime pollution Data from different zones of city, visit http://localhost:8000/aqi/id  
-  where id is a number between 0-7
+- cd into the directory of client and backend in different terminals and follow their setup instructions
 
 ## Additional Development Instructions
 

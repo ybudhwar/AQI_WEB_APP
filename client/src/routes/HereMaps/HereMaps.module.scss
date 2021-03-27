@@ -1,0 +1,12 @@
+.hereMaps{
+    width: 100vw; 
+    height:100vh; 
+    background: grey;
+    position:relative  
+}
+
+@media(min-width:850px){
+    .hereMaps{
+        position: unset;
+    }
+}

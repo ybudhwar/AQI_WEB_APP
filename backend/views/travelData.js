@@ -22,7 +22,7 @@ function getTravelData(req, res) {
     for (var i = 0; i < response.data.routes.length; i++) {
       result = [...result, formatData(response.data.routes[i])];
     }
-    res.send(result);
+    res.json(result).status(200);
   }).catch((error) => {
     if (error.response) {
       if (error.response.status == 400) {
@@ -47,24 +47,30 @@ function getTravelData(req, res) {
     }
   });
 }
+const getColor = (time) => {
+  if(time <= 15*60) return "green";
+  else if(time <= 30*60) return "yellow";
+  else if(time <= 45*60) return "orange";
+  else if(time <= 60*60) return "brown";
+  else return "red";
+}
 function formatData(route) {
-  let departurePlace = route.sections[0].departure.place;
-  let arrivalPlace = route.sections[route.sections.length - 1].arrival.place;
-  let startTime = route.sections[0].departure.time;
-  let endTime = route.sections[route.sections.length - 1].arrival.time;
-  let travelTime = moment
+  const routeData = route.sections.map((section)=>{
+    let travelTime = moment
     .duration(
-      moment(endTime, "YYYY/MM/DD HH:mm").diff(
-        moment(startTime, "YYYY/MM/DD HH:mm")
+      moment(section.arrival.time, "YYYY/MM/DD HH:mm").diff(
+        moment(section.departure.time, "YYYY/MM/DD HH:mm")
       )
     )
     .asSeconds();
-  //In seconds
-  return {
-    travelTime,
-    departurePlace,
-    arrivalPlace,
-  };
+    return {
+      travelTime,
+      color : getColor(travelTime),
+      begin: section.departure.place.location,
+      end: section.arrival.place.location,
+    }
+  })
+  return routeData;
 }
 
 module.exports = getTravelData;
