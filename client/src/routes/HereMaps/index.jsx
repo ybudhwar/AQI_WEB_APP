@@ -11,20 +11,43 @@ const HereMaps = () => {
     });
   };
 
-  const addPolylineToMap = (map, locations = [], lineWidth = 1, color) => {
-    let lineString = new window.H.geo.LineString();
-    locations.forEach((loc) => {
-      lineString.pushPoint(loc);
-    });
-    map.addObject(
-      new window.H.map.Polyline(lineString, { style: { lineWidth: lineWidth+2 , strokeColor:'black'} })
-    ); // add border to the polyline
-    map.addObject(
-      new window.H.map.Polyline(lineString, { style: { lineWidth: lineWidth , strokeColor:color} })
-    );
-  };
+  const addPolylineToMap = (
+    map,
+    linestring,
+    lineWidth = 1,
+    color = "#ff00ff",
+    arrow = false
+  ) => {
+    let routeLine;
+    if (arrow) {
+      const routeOutline = new window.H.map.Polyline(linestring, {
+        style: {
+          lineWidth,
+          strokeColor: color,
+          lineTailCap: "arrow-tail",
+          lineHeadCap: "arrow-head",
+        },
+      });
+      const routeArrows = new window.H.map.Polyline(linestring, {
+        style: {
+          lineWidth,
+          fillColor: "white",
+          strokeColor: "rgba(255, 255, 255, 1)",
+          lineDash: [0, 2],
+          lineTailCap: "arrow-tail",
+          lineHeadCap: "arrow-head",
+        },
+      });
+      routeLine = new window.H.map.Group();
+      routeLine.addObjects([routeOutline, routeArrows]);
+    } else {
+      routeLine = new window.H.map.Polyline(linestring, {
+        style: { strokeColor: color, lineWidth },
+      });
+    }
 
-  
+    map.addObjects([routeLine]);
+  };
 
   useEffect(() => {
     const apikey = process.env.REACT_APP_HERE_API_KEY;
@@ -37,8 +60,8 @@ const HereMaps = () => {
       mapContainer,
       defaultLayers.vector.normal.map,
       {
-        center: LOCATIONS.delhi,
-        zoom: 11,
+        center: LOCATIONS.rajivChowk,
+        zoom: 12,
         pixelRatio: window.devicePixelRatio || 1,
       }
     );
@@ -52,25 +75,27 @@ const HereMaps = () => {
     const fetchAndAddRoutes = (map) => {
       const origin = LOCATIONS.rajivChowk;
       const dest = LOCATIONS.okhla;
-      
-      addMarkersToMap(map,[origin, dest]) // plot origin and destination on map
-  
+
+      addMarkersToMap(map, [origin, dest]); // plot origin and destination on map
+
       const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng}&dest=${dest.lat},${dest.lng}`;
       fetch(url)
         .then((res) => res.json())
         .then((routes) => {
-          routes.forEach(route => {
-            route.forEach(section => {
-              const line = [section.begin, section.end];
-              addPolylineToMap(map,line, 5, section.color)
-            })
-          })
+          routes.forEach((route) => {
+            route.forEach((section) => {
+              let linestring = window.H.geo.LineString.fromFlexiblePolyline(
+                section.polyline
+              );
+              addPolylineToMap(map, linestring, 10, section.color, true);
+            });
+          });
         })
         .catch((err) => {
           console.log(err);
         });
     };
-    
+
     fetchAndAddRoutes(map);
 
     return () => {
