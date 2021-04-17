@@ -15,6 +15,10 @@ const LOCATIONS = {
         lat: 28.5640,
         lng: 77.3343
     },
+    okhla:{
+        lat: 28.5626, 
+        lng: 77.2914
+    }
 }
 
 export default LOCATIONS;

@@ -51,7 +51,7 @@ const HereMaps = () => {
 
     const fetchAndAddRoutes = (map) => {
       const origin = LOCATIONS.rajivChowk;
-      const dest = LOCATIONS.botanicalGarden;
+      const dest = LOCATIONS.okhla;
       
       addMarkersToMap(map,[origin, dest]) // plot origin and destination on map
   
