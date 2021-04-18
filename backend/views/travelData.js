@@ -15,6 +15,7 @@ function getTravelData(req, res) {
       alternatives: 10,
       destination: dest,
       origin: origin,
+      return: "polyline"
     },
   });
   p.then((response) => {
@@ -49,7 +50,7 @@ function getTravelData(req, res) {
 }
 const getColor = (time) => {
   if(time <= 15*60) return "green";
-  else if(time <= 30*60) return "yellow";
+  else if(time <= 30*60) return "blue";
   else if(time <= 45*60) return "orange";
   else if(time <= 60*60) return "brown";
   else return "red";
@@ -68,6 +69,8 @@ function formatData(route) {
       color : getColor(travelTime),
       begin: section.departure.place.location,
       end: section.arrival.place.location,
+      transport: section.transport,
+      polyline: section.polyline
     }
   })
   return routeData;
