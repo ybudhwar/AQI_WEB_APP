@@ -13,7 +13,7 @@ app.use(morgan('dev'));
 app.use(cors());
 
 // Update Database regularly
-// updateDatabase();
+updateDatabase();
 setInterval(updateDatabase,1800000) // update pm2_5 database every 30 minutes
 
 app.use("/", routes);
