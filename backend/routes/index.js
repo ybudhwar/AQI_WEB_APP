@@ -7,4 +7,6 @@ router.get("/aqi/:id/", pollutionViews.getPollutionData);
 
 router.get("/gettraveldata/:query", getTravelData);
 
+router.get("/getPMData/:lat/:lng", pollutionViews.getPMData);
+
 module.exports = router;
