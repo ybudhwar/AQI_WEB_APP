@@ -76,8 +76,6 @@ exports.getPM2_5 = (lat, lng) => {
 
     top += database[i].pm / Math.pow(dist, 2);
     bot += 1 / Math.pow(dist, 2);
-
-    // console.log(x2, y2, database[i].pm, dist);
   }
   let pm2_5;
   if (bot == 0) {

@@ -1,5 +1,6 @@
 const axios = require("axios");
 const querystring = require("querystring");
+const calculateCongestion = require("../controllers/getCongestion");
 const { getPM2_5 } = require("../controllers/getPM2_5");
 const API_URL = "https://intermodal.router.hereapi.com/v8/routes";
 
@@ -29,7 +30,13 @@ function getTravelData(req, res) {
         console.log(err);
       }
     }
-    res.json(result).status(200);
+    try {
+      const finalResult = await calculateCongestion(result);
+      res.json(finalResult).status(200);
+    } catch (err) {
+      console.log(err);
+      res.json({ msg: "Error in processing data" }).status(400);
+    }
   }).catch((error) => {
     if (error.response) {
       if (error.response.status == 400) {
@@ -54,13 +61,6 @@ function getTravelData(req, res) {
     }
   });
 }
-const getColor = (time) => {
-  if (time <= 15 * 60) return "green";
-  else if (time <= 30 * 60) return "blue";
-  else if (time <= 45 * 60) return "orange";
-  else if (time <= 60 * 60) return "brown";
-  else return "red";
-};
 const getPMColor = (valuepm) => {
   if (valuepm <= 60) return "green";
   else if (valuepm <= 90) return "yellow";
@@ -86,7 +86,6 @@ async function formatData(route) {
       const sec = {
         travelTime,
         distance: route.sections[i].travelSummary.length,
-        color: getColor(travelTime),
         pmValue,
         pmColor: getPMColor(pmValue),
         begin: route.sections[i].departure.place.location,
