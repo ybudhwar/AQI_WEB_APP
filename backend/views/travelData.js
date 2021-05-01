@@ -1,6 +1,7 @@
 const axios = require("axios");
 const querystring = require("querystring");
 const moment = require("moment");
+const { getPM2_5 } = require("../controllers/getPM2_5");
 const API_URL = "https://intermodal.router.hereapi.com/v8/routes";
 
 function getTravelData(req, res) {
@@ -15,7 +16,7 @@ function getTravelData(req, res) {
       alternatives: 10,
       destination: dest,
       origin: origin,
-      return: "polyline"
+      return: "polyline",
     },
   });
   p.then((response) => {
@@ -49,30 +50,49 @@ function getTravelData(req, res) {
   });
 }
 const getColor = (time) => {
-  if(time <= 15*60) return "green";
-  else if(time <= 30*60) return "blue";
-  else if(time <= 45*60) return "orange";
-  else if(time <= 60*60) return "brown";
+  if (time <= 15 * 60) return "green";
+  else if (time <= 30 * 60) return "blue";
+  else if (time <= 45 * 60) return "orange";
+  else if (time <= 60 * 60) return "brown";
   else return "red";
-}
+};
+const getPMcolor = (valuepm) => {
+  if (valuepm <= 60) return "green";
+  else if (valuepm <= 90) return "yellow";
+  else if (valuepm <= 120) return "orange";
+  else if (valuepm <= 250) return "red";
+  else return "brown";
+};
 function formatData(route) {
-  const routeData = route.sections.map((section)=>{
+  const routeData = route.sections.map((section) => {
+    let pmvalue =
+      (getPM2_5(
+        section.departure.place.location.lat,
+        section.departure.place.location.lng
+      ) +
+        getPM2_5(
+          section.arrival.place.location.lat,
+          section.arrival.place.location.lng
+        )) /
+      2;
+    console.log(pmvalue);
     let travelTime = moment
-    .duration(
-      moment(section.arrival.time, "YYYY/MM/DD HH:mm").diff(
-        moment(section.departure.time, "YYYY/MM/DD HH:mm")
+      .duration(
+        moment(section.arrival.time, "YYYY/MM/DD HH:mm").diff(
+          moment(section.departure.time, "YYYY/MM/DD HH:mm")
+        )
       )
-    )
-    .asSeconds();
+      .asSeconds();
     return {
       travelTime,
-      color : getColor(travelTime),
+      color: getColor(travelTime),
+      pmcolor: getPMcolor(pmvalue),
       begin: section.departure.place.location,
       end: section.arrival.place.location,
       transport: section.transport,
-      polyline: section.polyline
-    }
-  })
+      polyline: section.polyline,
+    };
+  });
   return routeData;
 }
 
