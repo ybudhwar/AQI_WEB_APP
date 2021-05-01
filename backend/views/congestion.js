@@ -1,5 +1,4 @@
 const axios = require("axios");
-const { response } = require("express");
 const API_URL = "https://route.ls.hereapi.com/routing/7.2/calculateroute.json";
 function calculateCongestion(req, res, next) {
   let { route } = req.body;

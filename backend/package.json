@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon ./bin/www.js",
+    "start": "nodemon ./bin/www",
     "lint:fix": "eslint *.js --fix",
     "lint": "eslint *.js",
     "test": "echo \"Error: no test specified\" && exit 1",
