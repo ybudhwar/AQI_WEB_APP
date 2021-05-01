@@ -1,12 +1,18 @@
 import { BASE_URL } from "helpers/config";
-import React, { useEffect } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import styles from "./HereMaps.module.scss";
 import LOCATIONS from "./locations";
 
+const H = window.H;
+const apikey = process.env.REACT_APP_HERE_API_KEY;
+
 const HereMaps = () => {
+  const mapRef = useRef(null);
+  const [map, setMap] = useState(null);
+
   const addMarkersToMap = (map, locations = []) => {
     locations.forEach((location) => {
-      const locationMarker = new window.H.map.Marker(location);
+      const locationMarker = new H.map.Marker(location);
       map.addObject(locationMarker);
     });
   };
@@ -20,7 +26,7 @@ const HereMaps = () => {
   ) => {
     let routeLine;
     if (arrow) {
-      const routeOutline = new window.H.map.Polyline(linestring, {
+      const routeOutline = new H.map.Polyline(linestring, {
         style: {
           lineWidth,
           strokeColor: color,
@@ -28,7 +34,7 @@ const HereMaps = () => {
           lineHeadCap: "arrow-head",
         },
       });
-      const routeArrows = new window.H.map.Polyline(linestring, {
+      const routeArrows = new H.map.Polyline(linestring, {
         style: {
           lineWidth,
           fillColor: "white",
@@ -38,10 +44,10 @@ const HereMaps = () => {
           lineHeadCap: "arrow-head",
         },
       });
-      routeLine = new window.H.map.Group();
+      routeLine = new H.map.Group();
       routeLine.addObjects([routeOutline, routeArrows]);
     } else {
-      routeLine = new window.H.map.Polyline(linestring, {
+      routeLine = new H.map.Polyline(linestring, {
         style: { strokeColor: color, lineWidth },
       });
     }
@@ -49,22 +55,19 @@ const HereMaps = () => {
     map.addObjects([routeLine]);
   };
 
-  useEffect(() => {
-    const apikey = process.env.REACT_APP_HERE_API_KEY;
-    const platform = new window.H.service.Platform({
+  useLayoutEffect(() => {
+    if (!mapRef.current) return;
+
+    const platform = new H.service.Platform({
       apikey: apikey,
     });
     const defaultLayers = platform.createDefaultLayers();
-    const mapContainer = document.getElementById("demo-map");
-    const map = new window.H.Map(
-      mapContainer,
-      defaultLayers.vector.normal.map,
-      {
-        center: LOCATIONS.rajivChowk,
-        zoom: 12,
-        pixelRatio: window.devicePixelRatio || 1,
-      }
-    );
+    const map = new H.Map(mapRef.current, defaultLayers.vector.normal.map, {
+      center: LOCATIONS.rajivChowk,
+      zoom: 12,
+      pixelRatio: window.devicePixelRatio || 1,
+    });
+    setMap(map);
     window.addEventListener("resize", map.getViewPort().resize);
     const behavior = new window.H.mapevents.Behavior(
       new window.H.mapevents.MapEvents(map)
@@ -84,7 +87,7 @@ const HereMaps = () => {
         .then((routes) => {
           routes.forEach((route) => {
             route.forEach((section) => {
-              let linestring = window.H.geo.LineString.fromFlexiblePolyline(
+              let linestring = H.geo.LineString.fromFlexiblePolyline(
                 section.polyline
               );
               addPolylineToMap(map, linestring, 10, section.color, true);
@@ -108,7 +111,7 @@ const HereMaps = () => {
       <div className="page-header">
         <h1>Here Maps Demo</h1>
       </div>
-      <div id="demo-map" className={styles.hereMaps}></div>
+      <div id="demo-map" ref={mapRef} className={styles.hereMaps}></div>
     </>
   );
 };
