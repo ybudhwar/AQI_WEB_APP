@@ -19,10 +19,15 @@ function getTravelData(req, res) {
       return: "polyline",
     },
   });
-  p.then((response) => {
+  p.then(async (response) => {
     let result = [];
     for (var i = 0; i < response.data.routes.length; i++) {
-      result = [...result, formatData(response.data.routes[i])];
+      try {
+        const formattedRoute = await formatData(response.data.routes[i]);
+        result = [...result, formattedRoute];
+      } catch (err) {
+        console.log(err);
+      }
     }
     res.json(result).status(200);
   }).catch((error) => {
@@ -63,36 +68,42 @@ const getPMcolor = (valuepm) => {
   else if (valuepm <= 250) return "red";
   else return "brown";
 };
-function formatData(route) {
-  const routeData = route.sections.map((section) => {
-    let pmvalue =
-      (getPM2_5(
-        section.departure.place.location.lat,
-        section.departure.place.location.lng
-      ) +
-        getPM2_5(
-          section.arrival.place.location.lat,
-          section.arrival.place.location.lng
-        )) /
-      2;
-    console.log(pmvalue);
-    let travelTime = moment
-      .duration(
-        moment(section.arrival.time, "YYYY/MM/DD HH:mm").diff(
-          moment(section.departure.time, "YYYY/MM/DD HH:mm")
+async function formatData(route) {
+  let routeData = [];
+  for (let i = 0; i < route.sections.length; i++) {
+    try {
+      const pm1 = await getPM2_5(
+        route.sections[i].departure.place.location.lat,
+        route.sections[i].departure.place.location.lng
+      );
+      const pm2 = await getPM2_5(
+        route.sections[i].arrival.place.location.lat,
+        route.sections[i].arrival.place.location.lng
+      );
+      const pmvalue = (pm1 + pm2) / 2;
+      // console.log(pmvalue);
+      let travelTime = moment
+        .duration(
+          moment(route.sections[i].arrival.time, "YYYY/MM/DD HH:mm").diff(
+            moment(route.sections[i].departure.time, "YYYY/MM/DD HH:mm")
+          )
         )
-      )
-      .asSeconds();
-    return {
-      travelTime,
-      color: getColor(travelTime),
-      pmcolor: getPMcolor(pmvalue),
-      begin: section.departure.place.location,
-      end: section.arrival.place.location,
-      transport: section.transport,
-      polyline: section.polyline,
-    };
-  });
+        .asSeconds();
+      const sec = {
+        travelTime,
+        color: getColor(travelTime),
+        pmcolor: getPMcolor(pmvalue),
+        begin: route.sections[i].departure.place.location,
+        end: route.sections[i].arrival.place.location,
+        transport: route.sections[i].transport,
+        polyline: route.sections[i].polyline,
+      };
+      // console.log(sec)
+      routeData = [...routeData, sec];
+    } catch (err) {
+      console.log(err);
+    }
+  }
   return routeData;
 }
 
