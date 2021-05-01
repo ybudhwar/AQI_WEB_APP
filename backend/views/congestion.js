@@ -9,7 +9,7 @@ function calculateCongestion(req, res, next) {
         waypoint0: `${route[i].begin.lat},${route[i].begin.lng}`,
         waypoint1: `${route[i].end.lat},${route[i].end.lng}`,
         mode: "fastest;car;traffic:enabled",
-        apiKey: process.env.api_key,
+        apiKey: process.env.here_api_key,
       },
     });
     promises.push(p);
