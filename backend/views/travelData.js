@@ -1,6 +1,5 @@
 const axios = require("axios");
 const querystring = require("querystring");
-const moment = require("moment");
 const { getPM2_5 } = require("../controllers/getPM2_5");
 const API_URL = "https://intermodal.router.hereapi.com/v8/routes";
 
@@ -16,7 +15,8 @@ function getTravelData(req, res) {
       alternatives: 10,
       destination: dest,
       origin: origin,
-      return: "polyline",
+      return: "polyline,travelSummary",
+      "transit[modes]": "-subway,-lightRail,-highSpeedTrain,-cityTrain", // remove undesirable transports
     },
   });
   p.then(async (response) => {
@@ -61,7 +61,7 @@ const getColor = (time) => {
   else if (time <= 60 * 60) return "brown";
   else return "red";
 };
-const getPMcolor = (valuepm) => {
+const getPMColor = (valuepm) => {
   if (valuepm <= 60) return "green";
   else if (valuepm <= 90) return "yellow";
   else if (valuepm <= 120) return "orange";
@@ -80,19 +80,15 @@ async function formatData(route) {
         route.sections[i].arrival.place.location.lat,
         route.sections[i].arrival.place.location.lng
       );
-      const pmvalue = (pm1 + pm2) / 2;
+      const pmValue = (pm1 + pm2) / 2;
       // console.log(pmvalue);
-      let travelTime = moment
-        .duration(
-          moment(route.sections[i].arrival.time, "YYYY/MM/DD HH:mm").diff(
-            moment(route.sections[i].departure.time, "YYYY/MM/DD HH:mm")
-          )
-        )
-        .asSeconds();
+      let travelTime = route.sections[i].travelSummary.duration;
       const sec = {
         travelTime,
+        distance: route.sections[i].travelSummary.length,
         color: getColor(travelTime),
-        pmcolor: getPMcolor(pmvalue),
+        pmValue,
+        pmColor: getPMColor(pmValue),
         begin: route.sections[i].departure.place.location,
         end: route.sections[i].arrival.place.location,
         transport: route.sections[i].transport,

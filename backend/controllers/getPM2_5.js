@@ -47,7 +47,7 @@ exports.updateDatabase = async () => {
 
   database = newData;
   console.log("Updated Database!");
-  console.log(database);
+  // console.log(database);
 };
 
 exports.getPM2_5 = (lat, lng) => {
