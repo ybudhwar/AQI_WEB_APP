@@ -19,6 +19,8 @@ const HereMaps = () => {
   const [showPm, setShowPm] = useState(false);
   const [currentRoute, setCurrentRoute] = useState(0);
   const [singleRoute, setSingleRoute] = useState(false);
+  const [afterMinutes, setAfterMinutes] = useState(0);
+  const [fetching, setFetching] = useState(false);
   const mapObjects = useRef([]);
 
   const addMarkersToMap = useCallback((map, locations = []) => {
@@ -70,7 +72,7 @@ const HereMaps = () => {
     const filteredValues = mapObjects.current.filter((value) =>
       map.getObjects().includes(value)
     );
-    console.log(filteredValues);
+    // console.log(filteredValues);
     map.removeObjects(filteredValues);
     mapObjects.current = [];
   }, [map]);
@@ -111,24 +113,31 @@ const HereMaps = () => {
 
   const fetchAndAddRoutes = () => {
     if (!map) return;
+    setFetching(true);
     const origin = LOCATIONS.botanicalGarden;
     const dest = LOCATIONS.okhla;
     let departureTime = new Date();
-    departureTime.setMinutes(departureTime.getMinutes()+70);
+    departureTime.setMinutes(departureTime.getMinutes() + afterMinutes);
     // console.log(departureTime)
-    const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng}&dest=${dest.lat},${dest.lng}&departureTime=${departureTime.toISOString()}`;
+    const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${
+      origin.lng
+    }&dest=${dest.lat},${
+      dest.lng
+    }&departureTime=${departureTime.toISOString()}`;
     addMarkersToMap(map, [origin, dest]); // plot origin and destination on map
     fetch(url)
       .then((res) => res.json())
       .then((routes) => {
         setRoutes(routes);
+        setFetching(false);
+        setSingleRoute(false);
       })
       .catch((err) => {
         console.log(err);
       });
   };
 
-  useEffect(fetchAndAddRoutes, [map, addMarkersToMap]);
+  useEffect(fetchAndAddRoutes, [map, addMarkersToMap, afterMinutes]);
   useEffect(updateMap, [routes, map, showPm, singleRoute, clearMap]);
   useEffect(showSingleRoute, [
     routes,
@@ -203,6 +212,54 @@ const HereMaps = () => {
               : null}{" "}
           </>
         ) : null}
+        <br />
+        After{" "}
+        <select
+          onChange={(e) => {
+            setAfterMinutes(e.target.value);
+          }}
+          disabled={fetching}
+        >
+          <option value={0} defaultValue>
+            0 min
+          </option>
+          <option value={10} defaultValue>
+            10 min
+          </option>
+          <option value={20} defaultValue>
+            20 min
+          </option>
+          <option value={30} defaultValue>
+            30 min
+          </option>
+          <option value={40} defaultValue>
+            40 min
+          </option>
+          <option value={50} defaultValue>
+            50 min
+          </option>
+          <option value={60} defaultValue>
+            60 min
+          </option>
+          <option value={70} defaultValue>
+            70 min
+          </option>
+          <option value={80} defaultValue>
+            80 min
+          </option>
+          <option value={90} defaultValue>
+            90 min
+          </option>
+          <option value={100} defaultValue>
+            100 min
+          </option>
+          <option value={110} defaultValue>
+            110 min
+          </option>
+          <option value={120} defaultValue>
+            120 min
+          </option>
+        </select>
       </div>
       <div id="demo-map" ref={mapRef} className={styles.hereMaps}></div>
     </>
