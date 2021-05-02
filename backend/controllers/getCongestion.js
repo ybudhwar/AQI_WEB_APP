@@ -1,7 +1,7 @@
 const axios = require("axios");
 const API_URL = "https://route.ls.hereapi.com/routing/7.2/calculateroute.json";
 
-async function getCongestionData(route, results) {
+async function getCongestionData(route, results, departureTime) {
   let promises = [];
   for (let i = 0; i < route.length; i++) {
     let p = axios.get(API_URL, {
@@ -10,6 +10,7 @@ async function getCongestionData(route, results) {
         waypoint1: `${route[i].end.lat},${route[i].end.lng}`,
         mode: "fastest;car;traffic:enabled",
         apiKey: process.env.here_api_key,
+        departure: departureTime,
       },
     });
     promises.push(p);
@@ -34,10 +35,10 @@ async function getCongestionData(route, results) {
     console.log(err);
   }
 }
-async function calculateCongestion(routes) {
+async function calculateCongestion(routes, departureTime) {
   let results = [];
   for (let i = 0; i < routes.length; i++) {
-    await getCongestionData(routes[i], results);
+    await getCongestionData(routes[i], results, departureTime);
   }
   return results;
 }

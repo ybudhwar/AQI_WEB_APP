@@ -111,9 +111,12 @@ const HereMaps = () => {
 
   const fetchAndAddRoutes = () => {
     if (!map) return;
-    const origin = LOCATIONS.rajivChowk;
+    const origin = LOCATIONS.botanicalGarden;
     const dest = LOCATIONS.okhla;
-    const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng}&dest=${dest.lat},${dest.lng}`;
+    let departureTime = new Date();
+    departureTime.setMinutes(departureTime.getMinutes()+70);
+    // console.log(departureTime)
+    const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng}&dest=${dest.lat},${dest.lng}&departureTime=${departureTime.toISOString()}`;
     addMarkersToMap(map, [origin, dest]); // plot origin and destination on map
     fetch(url)
       .then((res) => res.json())
@@ -143,7 +146,7 @@ const HereMaps = () => {
     });
     const defaultLayers = platform.createDefaultLayers();
     const map = new H.Map(mapRef.current, defaultLayers.vector.normal.map, {
-      center: LOCATIONS.rajivChowk,
+      center: LOCATIONS.botanicalGarden,
       zoom: 12,
       pixelRatio: window.devicePixelRatio || 1,
     });

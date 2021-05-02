@@ -9,6 +9,9 @@ function getTravelData(req, res) {
   let queryObj = querystring.parse(queryStr);
   let origin = queryObj.origin;
   let dest = queryObj.dest;
+  let departureTime = queryObj.departureTime
+    ? new Date(queryObj.departureTime)
+    : new Date();
 
   let p = axios.get(API_URL, {
     params: {
@@ -18,6 +21,7 @@ function getTravelData(req, res) {
       origin: origin,
       return: "polyline,travelSummary",
       "transit[modes]": "-subway,-lightRail,-highSpeedTrain,-cityTrain", // remove undesirable transports
+      departureTime: departureTime,
     },
   });
   p.then(async (response) => {
@@ -39,7 +43,7 @@ function getTravelData(req, res) {
     }
     try {
       const pmResult = getPMColor(result, minPm, maxPm);
-      const finalResult = await calculateCongestion(pmResult);
+      const finalResult = await calculateCongestion(pmResult, departureTime);
       res.json(finalResult).status(200);
     } catch (err) {
       console.log(err);
