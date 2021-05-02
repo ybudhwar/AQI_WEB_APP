@@ -1,7 +1,7 @@
 const axios = require("axios");
 const querystring = require("querystring");
-const moment = require("moment");
-const { getPM2_5 } = require("../controllers/getPM2_5");
+const calculateCongestion = require("../controllers/getCongestion");
+const { getPM2_5, getPMColor } = require("../controllers/getPM2_5");
 const API_URL = "https://intermodal.router.hereapi.com/v8/routes";
 
 function getTravelData(req, res) {
@@ -16,15 +16,35 @@ function getTravelData(req, res) {
       alternatives: 10,
       destination: dest,
       origin: origin,
-      return: "polyline",
+      return: "polyline,travelSummary",
+      "transit[modes]": "-subway,-lightRail,-highSpeedTrain,-cityTrain", // remove undesirable transports
     },
   });
-  p.then((response) => {
+  p.then(async (response) => {
     let result = [];
+    let minPm = 500,
+      maxPm = 0;
     for (var i = 0; i < response.data.routes.length; i++) {
-      result = [...result, formatData(response.data.routes[i])];
+      try {
+        const formattedRoute = await formatData(
+          response.data.routes[i],
+          maxPm,
+          minPm
+        );
+        result = [...result, formattedRoute.routeData];
+        (maxPm = formattedRoute.maxPm), (minPm = formattedRoute.minPm);
+      } catch (err) {
+        console.log(err);
+      }
     }
-    res.json(result).status(200);
+    try {
+      const pmResult = getPMColor(result, minPm, maxPm);
+      const finalResult = await calculateCongestion(pmResult);
+      res.json(finalResult).status(200);
+    } catch (err) {
+      console.log(err);
+      res.json({ msg: "Error in processing data" }).status(400);
+    }
   }).catch((error) => {
     if (error.response) {
       if (error.response.status == 400) {
@@ -49,51 +69,38 @@ function getTravelData(req, res) {
     }
   });
 }
-const getColor = (time) => {
-  if (time <= 15 * 60) return "green";
-  else if (time <= 30 * 60) return "blue";
-  else if (time <= 45 * 60) return "orange";
-  else if (time <= 60 * 60) return "brown";
-  else return "red";
-};
-const getPMcolor = (valuepm) => {
-  if (valuepm <= 60) return "green";
-  else if (valuepm <= 90) return "yellow";
-  else if (valuepm <= 120) return "orange";
-  else if (valuepm <= 250) return "red";
-  else return "brown";
-};
-function formatData(route) {
-  const routeData = route.sections.map((section) => {
-    let pmvalue =
-      (getPM2_5(
-        section.departure.place.location.lat,
-        section.departure.place.location.lng
-      ) +
-        getPM2_5(
-          section.arrival.place.location.lat,
-          section.arrival.place.location.lng
-        )) /
-      2;
-    console.log(pmvalue);
-    let travelTime = moment
-      .duration(
-        moment(section.arrival.time, "YYYY/MM/DD HH:mm").diff(
-          moment(section.departure.time, "YYYY/MM/DD HH:mm")
-        )
-      )
-      .asSeconds();
-    return {
-      travelTime,
-      color: getColor(travelTime),
-      pmcolor: getPMcolor(pmvalue),
-      begin: section.departure.place.location,
-      end: section.arrival.place.location,
-      transport: section.transport,
-      polyline: section.polyline,
-    };
-  });
-  return routeData;
+async function formatData(route, maxPm, minPm) {
+  let routeData = [];
+  for (let i = 0; i < route.sections.length; i++) {
+    try {
+      const pmValue = await getPM2_5(
+        (route.sections[i].departure.place.location.lat +
+          route.sections[i].arrival.place.location.lat) /
+          2,
+        (route.sections[i].departure.place.location.lng +
+          route.sections[i].arrival.place.location.lng) /
+          2
+      ); // get PM of midpoint
+      maxPm = Math.max(pmValue, maxPm);
+      minPm = Math.min(pmValue, minPm);
+      // console.log(pmvalue);
+      let travelTime = route.sections[i].travelSummary.duration;
+      const sec = {
+        travelTime,
+        distance: route.sections[i].travelSummary.length,
+        pmValue,
+        begin: route.sections[i].departure.place.location,
+        end: route.sections[i].arrival.place.location,
+        transport: route.sections[i].transport,
+        polyline: route.sections[i].polyline,
+      };
+      // console.log(sec)
+      routeData = [...routeData, sec];
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  return { routeData, maxPm, minPm };
 }
 
 module.exports = getTravelData;
