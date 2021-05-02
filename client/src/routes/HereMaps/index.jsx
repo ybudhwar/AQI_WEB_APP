@@ -1,5 +1,11 @@
 import { BASE_URL } from "helpers/config";
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import styles from "./HereMaps.module.scss";
 import LOCATIONS from "./locations";
 
@@ -9,13 +15,19 @@ const apikey = process.env.REACT_APP_HERE_API_KEY;
 const HereMaps = () => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
+  const [routes, setRoutes] = useState(null);
+  const [showPm, setShowPm] = useState(false);
+  const [currentRoute, setCurrentRoute] = useState(0);
+  const [singleRoute, setSingleRoute] = useState(false);
+  const mapObjects = useRef([]);
 
-  const addMarkersToMap = (map, locations = []) => {
+  const addMarkersToMap = useCallback((map, locations = []) => {
+    if (!map) return;
     locations.forEach((location) => {
       const locationMarker = new H.map.Marker(location);
       map.addObject(locationMarker);
     });
-  };
+  }, []);
 
   const addPolylineToMap = (
     map,
@@ -51,10 +63,78 @@ const HereMaps = () => {
         style: { strokeColor: color, lineWidth },
       });
     }
-
+    mapObjects.current = [...mapObjects.current, routeLine];
     map.addObjects([routeLine]);
   };
+  const clearMap = useCallback(() => {
+    const filteredValues = mapObjects.current.filter((value) =>
+      map.getObjects().includes(value)
+    );
+    console.log(filteredValues);
+    map.removeObjects(filteredValues);
+    mapObjects.current = [];
+  }, [map]);
 
+  const showSingleRoute = () => {
+    if (!map || !singleRoute) return;
+    clearMap();
+    routes[currentRoute].forEach((section) => {
+      let linestring = H.geo.LineString.fromFlexiblePolyline(section.polyline);
+      addPolylineToMap(
+        map,
+        linestring,
+        10,
+        showPm ? section.pmColor : section.congestionColor,
+        !showPm
+      );
+    });
+  };
+
+  const updateMap = () => {
+    if (!routes || !map) return;
+    clearMap();
+    routes.forEach((route) => {
+      route.forEach((section) => {
+        let linestring = H.geo.LineString.fromFlexiblePolyline(
+          section.polyline
+        );
+        addPolylineToMap(
+          map,
+          linestring,
+          10,
+          showPm ? section.pmColor : section.congestionColor,
+          !showPm
+        );
+      });
+    });
+  };
+
+  const fetchAndAddRoutes = () => {
+    if (!map) return;
+    const origin = LOCATIONS.rajivChowk;
+    const dest = LOCATIONS.okhla;
+    const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng}&dest=${dest.lat},${dest.lng}`;
+    addMarkersToMap(map, [origin, dest]); // plot origin and destination on map
+    fetch(url)
+      .then((res) => res.json())
+      .then((routes) => {
+        setRoutes(routes);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  useEffect(fetchAndAddRoutes, [map, addMarkersToMap]);
+  useEffect(updateMap, [routes, map, showPm, singleRoute, clearMap]);
+  useEffect(showSingleRoute, [
+    routes,
+    map,
+    showPm,
+    singleRoute,
+    currentRoute,
+    clearMap,
+  ]);
   useLayoutEffect(() => {
     if (!mapRef.current) return;
 
@@ -74,33 +154,6 @@ const HereMaps = () => {
     );
 
     console.log(behavior);
-
-    const fetchAndAddRoutes = (map) => {
-      const origin = LOCATIONS.rajivChowk;
-      const dest = LOCATIONS.okhla;
-
-      addMarkersToMap(map, [origin, dest]); // plot origin and destination on map
-
-      const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng}&dest=${dest.lat},${dest.lng}`;
-      fetch(url)
-        .then((res) => res.json())
-        .then((routes) => {
-          routes.forEach((route) => {
-            route.forEach((section) => {
-              let linestring = H.geo.LineString.fromFlexiblePolyline(
-                section.polyline
-              );
-              addPolylineToMap(map, linestring, 10, section.color, true);
-            });
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    };
-
-    fetchAndAddRoutes(map);
-
     return () => {
       window.removeEventListener("resize", map.getViewPort().resize);
     };
@@ -109,7 +162,44 @@ const HereMaps = () => {
   return (
     <>
       <div className="page-header">
-        <h1>Here Maps Demo</h1>
+        <h1>Congestion and PM2.5</h1>
+        <button
+          onClick={() => {
+            return setShowPm((prevState) => {
+              return !prevState;
+            });
+          }}
+        >
+          {showPm ? "Show Congestion" : "Show PM2.5"}
+        </button>
+        <br />
+        {routes ? (
+          <>
+            <button
+              onClick={() => {
+                setSingleRoute((prevState) => !prevState);
+              }}
+            >
+              {singleRoute ? "Show All Routes" : "Show Individual Routes"}
+            </button>
+            <br />
+            {singleRoute
+              ? routes.map((route, index) => {
+                  return (
+                    <button
+                      onClick={() => {
+                        setCurrentRoute(index);
+                      }}
+                      key={index}
+                      disabled={currentRoute === index}
+                    >
+                      {`Show Route ${index + 1}`}
+                    </button>
+                  );
+                })
+              : null}{" "}
+          </>
+        ) : null}
       </div>
       <div id="demo-map" ref={mapRef} className={styles.hereMaps}></div>
     </>
