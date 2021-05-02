@@ -1,7 +1,7 @@
 const axios = require("axios");
 const querystring = require("querystring");
 const calculateCongestion = require("../controllers/getCongestion");
-const { getPM2_5 } = require("../controllers/getPM2_5");
+const { getPM2_5, getPMColor } = require("../controllers/getPM2_5");
 const API_URL = "https://intermodal.router.hereapi.com/v8/routes";
 
 function getTravelData(req, res) {
@@ -22,16 +22,24 @@ function getTravelData(req, res) {
   });
   p.then(async (response) => {
     let result = [];
+    let minPm = 500,
+      maxPm = 0;
     for (var i = 0; i < response.data.routes.length; i++) {
       try {
-        const formattedRoute = await formatData(response.data.routes[i]);
-        result = [...result, formattedRoute];
+        const formattedRoute = await formatData(
+          response.data.routes[i],
+          maxPm,
+          minPm
+        );
+        result = [...result, formattedRoute.routeData];
+        (maxPm = formattedRoute.maxPm), (minPm = formattedRoute.minPm);
       } catch (err) {
         console.log(err);
       }
     }
     try {
-      const finalResult = await calculateCongestion(result);
+      const pmResult = getPMColor(result, minPm, maxPm);
+      const finalResult = await calculateCongestion(pmResult);
       res.json(finalResult).status(200);
     } catch (err) {
       console.log(err);
@@ -61,33 +69,26 @@ function getTravelData(req, res) {
     }
   });
 }
-const getPMColor = (valuepm) => {
-  if (valuepm <= 60) return "green";
-  else if (valuepm <= 90) return "yellow";
-  else if (valuepm <= 120) return "orange";
-  else if (valuepm <= 250) return "red";
-  else return "brown";
-};
-async function formatData(route) {
+async function formatData(route, maxPm, minPm) {
   let routeData = [];
   for (let i = 0; i < route.sections.length; i++) {
     try {
-      const pm1 = await getPM2_5(
-        route.sections[i].departure.place.location.lat,
-        route.sections[i].departure.place.location.lng
-      );
-      const pm2 = await getPM2_5(
-        route.sections[i].arrival.place.location.lat,
-        route.sections[i].arrival.place.location.lng
-      );
-      const pmValue = (pm1 + pm2) / 2;
+      const pmValue = await getPM2_5(
+        (route.sections[i].departure.place.location.lat +
+          route.sections[i].arrival.place.location.lat) /
+          2,
+        (route.sections[i].departure.place.location.lng +
+          route.sections[i].arrival.place.location.lng) /
+          2
+      ); // get PM of midpoint
+      maxPm = Math.max(pmValue, maxPm);
+      minPm = Math.min(pmValue, minPm);
       // console.log(pmvalue);
       let travelTime = route.sections[i].travelSummary.duration;
       const sec = {
         travelTime,
         distance: route.sections[i].travelSummary.length,
         pmValue,
-        pmColor: getPMColor(pmValue),
         begin: route.sections[i].departure.place.location,
         end: route.sections[i].arrival.place.location,
         transport: route.sections[i].transport,
@@ -99,7 +100,7 @@ async function formatData(route) {
       console.log(err);
     }
   }
-  return routeData;
+  return { routeData, maxPm, minPm };
 }
 
 module.exports = getTravelData;

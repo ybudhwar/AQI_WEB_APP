@@ -1,4 +1,5 @@
 const { default: axios } = require("axios");
+const getColorForPercentage = require("../utils/getColorForPercentage");
 
 let database = [];
 
@@ -85,4 +86,27 @@ exports.getPM2_5 = (lat, lng) => {
   }
 
   return pm2_5;
+};
+
+exports.getPMColor = (routes = [], minPm, maxPm) => {
+  let colorizedPmRoutes = [];
+  // console.log(minPm, maxPm);
+  routes.forEach((route) => {
+    colorizedPmRoutes = [
+      ...colorizedPmRoutes,
+      route && route.length > 0
+        ? route.map((section) => {
+            const normalizedPm =
+              maxPm > minPm ? (section.pmValue - minPm) / (maxPm - minPm) : -1;
+            return {
+              ...section,
+              normalizedPm,
+              pmColor: getColorForPercentage(normalizedPm),
+            };
+          })
+        : {},
+    ];
+  });
+  // console.log(colorizedPmRoutes)
+  return colorizedPmRoutes;
 };
