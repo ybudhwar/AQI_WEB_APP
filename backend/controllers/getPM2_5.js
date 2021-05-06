@@ -9,14 +9,30 @@ exports.updateDatabase = async () => {
     "delhi/Alipur",
     "delhi/anand-vihar",
     "delhi/aya-nagar",
-    "delhi/mandir-marg",
-    "delhi/jawaharlal-nehru-stadium",
-    "delhi/mundka",
-    "india/ghaziabad/indirapuram",
-    "india/new-delhi/us-embassy",
-    "delhi/pusa",
-    "india/noida/sector-125",
+    "delhi/delhi-institute-of-tool-engineering--wazirpur", //new
     "delhi/dite-okhla",
+    "delhi/iti-jahangirpuri", //new
+    "delhi/iti-shahdra--jhilmil-industrial-area", //new
+    "delhi/jawaharlal-nehru-stadium",
+    "delhi/major-dhyan-chand-national-stadium", //new
+    "delhi/mandir-marg",
+    "delhi/mother-dairy-plant--parparganj", //new
+    "delhi/mundka",
+    "delhi/narela", //new
+    "delhi/pgdav-college--sriniwaspuri", //new
+    "delhi/pooth-khurd--bawana", //new
+    "delhi/punjabi-bagh", //new
+    "delhi/pusa",
+    "delhi/r.k.-puram", //new
+    "delhi/satyawati-college", //new
+    "delhi/shaheed-sukhdev-college-of-business-studies--rohini", //new
+    "delhi/sonia-vihar-water-treatment-plant-djb", //new
+    "delhi/sri-auribindo-marg", //new
+    "india/ghaziabad/indirapuram",
+    "india/ghaziabad/loni", //new
+    "india/new-delhi/us-embassy",
+    "india/noida/sector-1", //new
+    "india/noida/sector-125",
   ]; // available locations for pm2.5 data
 
   const getData = async (location, api_url) => {
