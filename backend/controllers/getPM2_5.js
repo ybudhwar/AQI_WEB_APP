@@ -84,14 +84,14 @@ exports.getPM2_5 = (lat, lng) => {
 
     return 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
   }
-
-  for (let i = 0; i < database.length; i++) {
-    const x2 = database[i].latitude;
-    const y2 = database[i].longitude;
+  const currentDatabase = [...database]; // use contant value for a particular calculation as database is updated every 10 seconds
+  for (let i = 0; i < currentDatabase.length; i++) {
+    const x2 = currentDatabase[i].latitude;
+    const y2 = currentDatabase[i].longitude;
 
     dist = distance(x1, y1, x2, y2);
 
-    top += database[i].pm / Math.pow(dist, 2);
+    top += currentDatabase[i].pm / Math.pow(dist, 2);
     bot += 1 / Math.pow(dist, 2);
   }
   let pm2_5;
