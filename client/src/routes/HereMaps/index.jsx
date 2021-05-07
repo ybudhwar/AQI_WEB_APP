@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import styles from "./HereMaps.module.scss";
 import LOCATIONS from "./locations";
+import "./App.css"
 
 const H = window.H;
 const apikey = process.env.REACT_APP_HERE_API_KEY;
@@ -22,14 +23,119 @@ const HereMaps = () => {
   const [afterMinutes, setAfterMinutes] = useState(0);
   const [fetching, setFetching] = useState(false);
   const mapObjects = useRef([]);
+  const mapMarkers = useRef([]);
+
+  const [places, setPlaces] = useState([]);
+  const [display, setDisplay] = useState(false);
+  const [display1, setDisplay1] = useState(false);
+  const wrapperRef = useRef(null);
+  const wrapperRef1 = useRef(null);
+  const [origin, setOrigin] = useState(null);
+  const [dest, setDest] = useState(null);
+  const [orv, setOriginv] = useState({ lat: null, lng: null });
+  const [dsv, setDestv] = useState({ lat: null, lng: null });
+  var aurl = "https://autocomplete.geocoder.ls.hereapi.com/6.2/suggest.json?query=";
+  var burl = "https://geocoder.ls.hereapi.com/6.2/geocode.json?locationid=";
+  var curl = "&jsonattributes=1&gen=9";
+  var apik = "&apiKey=";
+
+  useEffect(() => {
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  });
+
+  useEffect(() => {
+    window.addEventListener("mousedown", handleClickOutside1);
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside1);
+    };
+  });
+
+  const handleClickOutside = event => {
+    const { current: wrap } = wrapperRef;
+    if (wrap && !wrap.contains(event.target)) {
+      setDisplay(false);
+    }
+  };
+
+  const handleClickOutside1 = event => {
+    const { current: wrap } = wrapperRef1;
+    if (wrap && !wrap.contains(event.target)) {
+      setDisplay1(false);
+    }
+  };
 
   const addMarkersToMap = useCallback((map, locations = []) => {
     if (!map) return;
     locations.forEach((location) => {
       const locationMarker = new H.map.Marker(location);
       map.addObject(locationMarker);
+      mapObjects.current = [...mapObjects.current, locationMarker];
     });
   }, []);
+
+
+
+  async function getDataApi(val) {
+    const response = await fetch(aurl + val + apik + apikey);
+    const data = await response.json();
+    // console.log(data["suggestions"][0]["label"]);
+    var ar = []
+    if ("suggestions" in data) {
+      for (var i = 0; i < data["suggestions"].length; i++) {
+        var lp = { label: data["suggestions"][i]["label"], lid: data["suggestions"][i]["locationId"] };
+        ar.push(lp);
+      }
+    }
+    // console.log(ar);
+    return ar;
+  }
+
+  async function getLattLong(location_id) {
+    const response = await fetch(burl + location_id + curl + apik + apikey);
+    const data = await response.json();
+
+    console.log(data);
+    setOriginv({ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] });
+    // addMarkersToMap(map, [{ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] }]);
+  }
+
+  async function getLattLongd(location_id) {
+    const response = await fetch(burl + location_id + curl + apik + apikey);
+    const data = await response.json();
+
+    console.log(data);
+    setDestv({ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] });
+    // addMarkersToMap(map, [{ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] }]);
+  }
+
+  async function getData(event) {
+    setOrigin(event.target.value);
+    var res = await getDataApi(event.target.value);
+    setPlaces(res);
+    console.log(res);
+  }
+
+  async function getDataD(event) {
+    setDest(event.target.value);
+    var res = await getDataApi(event.target.value);
+    setPlaces(res);
+    console.log(res);
+  }
+
+  const updateOriginValue = val => {
+    setOrigin(val.label);
+    getLattLong(val.lid);
+    setDisplay(false);
+  };
+
+  const updateDestValue = val => {
+    setDest(val.label);
+    getLattLongd(val.lid);
+    setDisplay1(false);
+  };
 
   const addPolylineToMap = (
     map,
@@ -80,6 +186,7 @@ const HereMaps = () => {
   const showSingleRoute = () => {
     if (!map || !singleRoute) return;
     clearMap();
+    addMarkersToMap(map, [orv, dsv]);
     routes[currentRoute].forEach((section) => {
       let linestring = H.geo.LineString.fromFlexiblePolyline(section.polyline);
       addPolylineToMap(
@@ -95,6 +202,7 @@ const HereMaps = () => {
   const updateMap = () => {
     if (!routes || !map) return;
     clearMap();
+    addMarkersToMap(map, [orv, dsv]);
     routes.forEach((route) => {
       route.forEach((section) => {
         let linestring = H.geo.LineString.fromFlexiblePolyline(
@@ -114,16 +222,20 @@ const HereMaps = () => {
   const fetchAndAddRoutes = () => {
     if (!map) return;
     setFetching(true);
-    const origin = LOCATIONS.botanicalGarden;
-    const dest = LOCATIONS.okhla;
+    const origin = orv;
+    if (origin.lat == null || origin.lng == null)
+      return;
+    const dest = dsv;
+    if (dest.lat == null || dest.lng == null)
+      return;
     let departureTime = new Date();
     departureTime.setMinutes(departureTime.getMinutes() + afterMinutes);
     // console.log(departureTime)
-    const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${
-      origin.lng
-    }&dest=${dest.lat},${
-      dest.lng
-    }&departureTime=${departureTime.toISOString()}`;
+    const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng
+      }&dest=${dest.lat},${dest.lng
+      }&departureTime=${departureTime.toISOString()}`;
+
+    clearMap();
     addMarkersToMap(map, [origin, dest]); // plot origin and destination on map
     fetch(url)
       .then((res) => res.json())
@@ -137,14 +249,15 @@ const HereMaps = () => {
       });
   };
 
-  useEffect(fetchAndAddRoutes, [map, addMarkersToMap, afterMinutes]);
-  useEffect(updateMap, [routes, map, showPm, singleRoute, clearMap]);
+  useEffect(fetchAndAddRoutes, [map, addMarkersToMap, afterMinutes, orv, dsv, clearMap]);
+  useEffect(updateMap, [routes, map, showPm, singleRoute, orv, dsv, clearMap]);
   useEffect(showSingleRoute, [
     routes,
     map,
     showPm,
     singleRoute,
     currentRoute,
+    orv, dsv,
     clearMap,
   ]);
   useLayoutEffect(() => {
@@ -175,6 +288,70 @@ const HereMaps = () => {
     <>
       <div className="page-header">
         <h1>Congestion and PM2.5</h1>
+
+        <div className="page-header">
+          {/* <h1>Here Map</h1> */}
+          <div>{orv.lat}</div>
+          <div>{orv.lng}</div>
+          <div>{dsv.lat}</div>
+          <div>{dsv.lng}</div>
+          <div ref={wrapperRef}>
+            <div class="input">
+              <input id="input1" autocomplete="off"
+                type="text"
+                onClick={() => setDisplay(!display)}
+                placeholder="Origin"
+                value={origin}
+                onChange={getData}
+              />
+            </div>
+            {display && (
+              <div className="autoContainer">
+                {places.map((value, i) => {
+                  return (
+                    <div
+                      className="option"
+                      onClick={() => updateOriginValue(value)}
+                      key={i}
+                      tabIndex="0"
+                    >
+                      <span>{value.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div ref={wrapperRef1}>
+            <div class="input">
+              <input id="input2" autocomplete="off"
+                type="text"
+                onClick={() => setDisplay1(true)}
+                placeholder="Destination"
+                value={dest}
+                onChange={getDataD}
+              />
+            </div>
+            {display1 && (
+              <div className="autoContainer">
+                {places.map((value, i) => {
+                  return (
+                    <div
+                      className="option"
+                      onClick={() => updateDestValue(value)}
+                      key={i}
+                      tabIndex="0"
+                    >
+                      <span>{value.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
         <button
           onClick={() => {
             return setShowPm((prevState) => {
@@ -197,18 +374,18 @@ const HereMaps = () => {
             <br />
             {singleRoute
               ? routes.map((route, index) => {
-                  return (
-                    <button
-                      onClick={() => {
-                        setCurrentRoute(index);
-                      }}
-                      key={index}
-                      disabled={currentRoute === index}
-                    >
-                      {`Show Route ${index + 1}`}
-                    </button>
-                  );
-                })
+                return (
+                  <button
+                    onClick={() => {
+                      setCurrentRoute(index);
+                    }}
+                    key={index}
+                    disabled={currentRoute === index}
+                  >
+                    {`Show Route ${index + 1}`}
+                  </button>
+                );
+              })
               : null}{" "}
           </>
         ) : null}
