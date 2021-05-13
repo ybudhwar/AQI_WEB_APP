@@ -8,7 +8,13 @@ import React, {
 } from "react";
 import styles from "./HereMaps.module.scss";
 import LOCATIONS from "./locations";
-import "./App.css"
+import "./App.css";
+import Button from "@material-ui/core/Button";
+import { IconButton, InputAdornment } from "@material-ui/core";
+import { DateTimePicker, KeyboardDateTimePicker, MuiPickersUtilsProvider, } from "@material-ui/pickers";
+import DateMomentUtils from '@date-io/moment';
+import { Fade } from '@material-ui/core';
+
 
 const H = window.H;
 const apikey = process.env.REACT_APP_HERE_API_KEY;
@@ -17,7 +23,7 @@ const HereMaps = () => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
   const [routes, setRoutes] = useState(null);
-  const [showPm, setShowPm] = useState(false);
+  const [showPm, setShowPm] = useState(true);
   const [currentRoute, setCurrentRoute] = useState(0);
   const [singleRoute, setSingleRoute] = useState(false);
   const [afterMinutes, setAfterMinutes] = useState(0);
@@ -28,6 +34,12 @@ const HereMaps = () => {
   const [places, setPlaces] = useState([]);
   const [display, setDisplay] = useState(false);
   const [display1, setDisplay1] = useState(false);
+  const [bcol, setCol] = useState('#E8F4F5');
+  const [tcol, setColt] = useState('#108898');
+
+  const [bcold, setCold] = useState('rgb(255,255,255)');
+  const [tcold, setColtd] = useState('#666666');
+
   const wrapperRef = useRef(null);
   const wrapperRef1 = useRef(null);
   const [origin, setOrigin] = useState(null);
@@ -38,6 +50,11 @@ const HereMaps = () => {
   var burl = "https://geocoder.ls.hereapi.com/6.2/geocode.json?locationid=";
   var curl = "&jsonattributes=1&gen=9";
   var apik = "&apiKey=";
+
+  const [selectedDate, handleDateChange] = useState(null);
+
+  const [inval, setInv] = useState(0);
+  const [rdisplay, setRdisplay] = useState(true);
 
   useEffect(() => {
     window.addEventListener("mousedown", handleClickOutside);
@@ -137,6 +154,20 @@ const HereMaps = () => {
     setDisplay1(false);
   };
 
+  function customo() {
+    setCol('#E8F4F5');
+    setColt('#108898');
+    setCold('rgb(255,255,255)');
+    setColtd('#666666');
+  }
+
+  function customd() {
+    setCold('#E8F4F5');
+    setColtd('#108898');
+    setCol('rgb(255,255,255)');
+    setColt('#666666');
+  }
+
   const addPolylineToMap = (
     map,
     linestring,
@@ -228,8 +259,10 @@ const HereMaps = () => {
     const dest = dsv;
     if (dest.lat == null || dest.lng == null)
       return;
-    let departureTime = new Date();
-    departureTime.setMinutes(departureTime.getMinutes() + afterMinutes);
+    if (selectedDate == null)
+      return;
+    let departureTime = selectedDate;
+    // departureTime.setMinutes(departureTime.getMinutes() + afterMinutes);
     // console.log(departureTime)
     const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng
       }&dest=${dest.lat},${dest.lng
@@ -249,7 +282,7 @@ const HereMaps = () => {
       });
   };
 
-  useEffect(fetchAndAddRoutes, [map, addMarkersToMap, afterMinutes, orv, dsv, clearMap]);
+  useEffect(fetchAndAddRoutes, [map, addMarkersToMap, afterMinutes, orv, dsv, selectedDate, clearMap]);
   useEffect(updateMap, [routes, map, showPm, singleRoute, orv, dsv, clearMap]);
   useEffect(showSingleRoute, [
     routes,
@@ -287,51 +320,57 @@ const HereMaps = () => {
   return (
     <>
       <div className="page-header">
-        <h1>Congestion and PM2.5</h1>
-
-        <div className="page-header">
-          {/* <h1>Here Map</h1> */}
-          <div>{orv.lat}</div>
-          <div>{orv.lng}</div>
-          <div>{dsv.lat}</div>
-          <div>{dsv.lng}</div>
+        {/* <div>{inval}</div> */}
+        <div id="appbar">
           <div ref={wrapperRef}>
             <div class="input">
-              <input id="input1" autocomplete="off"
-                type="text"
-                onClick={() => setDisplay(!display)}
-                placeholder="Origin"
-                value={origin}
-                onChange={getData}
-              />
-            </div>
-            {display && (
-              <div className="autoContainer">
-                {places.map((value, i) => {
-                  return (
-                    <div
-                      className="option"
-                      onClick={() => updateOriginValue(value)}
-                      key={i}
-                      tabIndex="0"
-                    >
-                      <span>{value.label}</span>
-                    </div>
-                  );
-                })}
+              <div class="origin">
+                <i class="material-icons icon">&#xe5c4;</i>
+                <div class="input5">
+                  <i class="material-icons icon1">&#xe55c;</i>
+                  <input id="input1" autocomplete="off"
+                    type="text"
+                    onClick={() => setDisplay(!display)}
+                    placeholder="Choose Starting point"
+                    value={origin}
+                    onChange={getData}
+                  />
+                </div>
               </div>
-            )}
+
+              {display && (
+                <div className="autoContainer">
+                  {places.map((value, i) => {
+                    return (
+                      <div
+                        className="option"
+                        onClick={() => updateOriginValue(value)}
+                        key={i}
+                        tabIndex="0"
+                      >
+                        {value.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
+
+          <div class="clearfix"></div>
 
           <div ref={wrapperRef1}>
             <div class="input">
-              <input id="input2" autocomplete="off"
-                type="text"
-                onClick={() => setDisplay1(true)}
-                placeholder="Destination"
-                value={dest}
-                onChange={getDataD}
-              />
+              <div class="input6">
+                <i class="material-icons icon1">&#xe568;</i>
+                <input id="input2" autocomplete="off"
+                  type="text"
+                  onClick={() => setDisplay1(true)}
+                  placeholder="Choose Destination"
+                  value={dest}
+                  onChange={getDataD}
+                />
+              </div>
             </div>
             {display1 && (
               <div className="autoContainer">
@@ -350,95 +389,113 @@ const HereMaps = () => {
               </div>
             )}
           </div>
-        </div>
 
-        <button
-          onClick={() => {
-            return setShowPm((prevState) => {
-              return !prevState;
-            });
-          }}
-        >
-          {showPm ? "Show Congestion" : "Show PM2.5"}
-        </button>
-        <br />
-        {routes ? (
-          <>
-            <button
+          <div class="clearfix"></div>
+
+          <div id="bottom3">
+            <Button id="PMV"
+              style={{ textTransform: 'none', backgroundColor: bcol, color: tcol, }}
               onClick={() => {
-                setSingleRoute((prevState) => !prevState);
+                return setShowPm(() => {
+                  customo();
+                  return true;
+                });
               }}
             >
-              {singleRoute ? "Show All Routes" : "Show Individual Routes"}
-            </button>
+              PM 2.5
+          </Button>
+
+            <Button id="CV"
+              style={{ textTransform: 'none', backgroundColor: bcold, color: tcold, }}
+              // color={col1}
+              onClick={() => {
+                customd();
+                return setShowPm(() => {
+                  return false;
+                });
+              }}
+            >
+              Congestion
+          </Button>
+
+            {/* <br /> */}
+
+            {/* <br /> */}
+            <div id="timemenu">
+              <MuiPickersUtilsProvider utils={DateMomentUtils}>
+                <KeyboardDateTimePicker id="pickdateandtime"
+                  value={null}
+                  onChange={handleDateChange}
+                  label=""
+                  inputVariant="standard"
+                  onError={console.log}
+                  ampm={false}
+                  minDate={new Date()}
+                  format="yyyy/MM/DD HH:mm"
+                />
+              </MuiPickersUtilsProvider>
+            </div>
+
+            <div class="clearfix"></div>
+          </div>
+
+          <div class="clearfix"></div>
+        </div>
+
+        <div id="demo-map" ref={mapRef} className={styles.hereMaps}></div>
+
+        <div id="bottombar">
+          <i class='fas prevb'
+            onClick={() => {
+              setInv(((inval - 1) % 7 + 7) % 7);
+              setRdisplay(true);
+            }
+            }
+          >&#xf137;</i>
+          <div id="bottombart">
+            <span id="bshow">
+              {routes ? (
+                <>
+                  {inval == 0 ? "Showing all routes" : `Showing Route ${inval}`}
+                </>
+              ) : "No Routes available"}
+            </span>
+
             <br />
-            {singleRoute
-              ? routes.map((route, index) => {
-                return (
-                  <button
-                    onClick={() => {
-                      setCurrentRoute(index);
-                    }}
-                    key={index}
-                    disabled={currentRoute === index}
-                  >
-                    {`Show Route ${index + 1}`}
-                  </button>
-                );
-              })
-              : null}{" "}
-          </>
-        ) : null}
-        <br />
-        After{" "}
-        <select
-          onChange={(e) => {
-            setAfterMinutes(e.target.value);
-          }}
-          disabled={fetching}
-        >
-          <option value={0} defaultValue>
-            0 min
-          </option>
-          <option value={10} defaultValue>
-            10 min
-          </option>
-          <option value={20} defaultValue>
-            20 min
-          </option>
-          <option value={30} defaultValue>
-            30 min
-          </option>
-          <option value={40} defaultValue>
-            40 min
-          </option>
-          <option value={50} defaultValue>
-            50 min
-          </option>
-          <option value={60} defaultValue>
-            60 min
-          </option>
-          <option value={70} defaultValue>
-            70 min
-          </option>
-          <option value={80} defaultValue>
-            80 min
-          </option>
-          <option value={90} defaultValue>
-            90 min
-          </option>
-          <option value={100} defaultValue>
-            100 min
-          </option>
-          <option value={110} defaultValue>
-            110 min
-          </option>
-          <option value={120} defaultValue>
-            120 min
-          </option>
-        </select>
+
+            <span id="bshow6">
+              {routes ? "6 Routes available" : null}
+            </span>
+          </div>
+          <i class='fas nextb'
+            onClick={() => {
+              setInv((inval + 1) % 7);
+              setRdisplay(true);
+            }
+
+            }
+          >&#xf138;</i>
+
+          {routes ? (
+            <>
+              {
+                rdisplay ? (
+                  <>
+                    {inval == 0 ?
+                      < div >
+                        {setSingleRoute(false)}
+                      </div>
+                      : <div>
+                        {setSingleRoute(true), setCurrentRoute(inval - 1)}
+                      </div>
+                    }
+                    {setRdisplay(false)}
+                  </>
+                ) : null}
+            </>
+          ) : null}
+        </div>
       </div>
-      <div id="demo-map" ref={mapRef} className={styles.hereMaps}></div>
     </>
   );
 };
