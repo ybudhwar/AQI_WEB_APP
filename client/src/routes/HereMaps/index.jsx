@@ -14,6 +14,8 @@ import { IconButton, InputAdornment } from "@material-ui/core";
 import { DateTimePicker, KeyboardDateTimePicker, MuiPickersUtilsProvider, } from "@material-ui/pickers";
 import DateMomentUtils from '@date-io/moment';
 import { Fade } from '@material-ui/core';
+import { BrowserRouter as Router, Redirect, Route, Link } from 'react-router-dom';
+
 
 
 const H = window.H;
@@ -29,7 +31,6 @@ const HereMaps = () => {
   const [afterMinutes, setAfterMinutes] = useState(0);
   const [fetching, setFetching] = useState(false);
   const mapObjects = useRef([]);
-  const mapMarkers = useRef([]);
 
   const [places, setPlaces] = useState([]);
   const [display, setDisplay] = useState(false);
@@ -114,7 +115,7 @@ const HereMaps = () => {
     const response = await fetch(burl + location_id + curl + apik + apikey);
     const data = await response.json();
 
-    console.log(data);
+    // console.log(data);
     setOriginv({ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] });
     // addMarkersToMap(map, [{ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] }]);
   }
@@ -123,7 +124,7 @@ const HereMaps = () => {
     const response = await fetch(burl + location_id + curl + apik + apikey);
     const data = await response.json();
 
-    console.log(data);
+    // console.log(data);
     setDestv({ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] });
     // addMarkersToMap(map, [{ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] }]);
   }
@@ -132,14 +133,14 @@ const HereMaps = () => {
     setOrigin(event.target.value);
     var res = await getDataApi(event.target.value);
     setPlaces(res);
-    console.log(res);
+    // console.log(res);
   }
 
   async function getDataD(event) {
     setDest(event.target.value);
     var res = await getDataApi(event.target.value);
     setPlaces(res);
-    console.log(res);
+    // console.log(res);
   }
 
   const updateOriginValue = val => {
@@ -311,7 +312,7 @@ const HereMaps = () => {
       new window.H.mapevents.MapEvents(map)
     );
 
-    console.log(behavior);
+    // console.log(behavior);
     return () => {
       window.removeEventListener("resize", map.getViewPort().resize);
     };
@@ -325,7 +326,7 @@ const HereMaps = () => {
           <div ref={wrapperRef}>
             <div class="input">
               <div class="origin">
-                <i class="material-icons icon">&#xe5c4;</i>
+                <Link to="/"><i class="material-icons icon">&#xe5c4;</i></Link>
                 <div class="input5">
                   <i class="material-icons icon1">&#xe55c;</i>
                   <input id="input1" autocomplete="off"

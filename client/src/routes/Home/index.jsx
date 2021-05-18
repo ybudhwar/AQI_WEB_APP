@@ -15,8 +15,8 @@ import Search from "./search.js"
 import "leaflet.idw/src/leaflet-idw";
 //import latlng from "react-leaflet"
 //import { latLng } from 'leaflet';
-import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-dom';
-import HereMaps from "routes/HereMaps";
+import { BrowserRouter as Router, Redirect, Route, Link } from 'react-router-dom';
+
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -200,16 +200,10 @@ const Home = () => {
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; <a href=&quot;https://www.openstreetmap.org/copyright&quot;>OpenStreetMap</a> contributors" />
                 <Search />
             </Map>
-            <div id="navigation"
-                onclick={() => {
-                    <Router>
-                        <Switch>
-                            <Route exact path="/map" render={() => <HereMaps />} />
-                        </Switch>
-                    </Router>
-                }}><div id="icon1"><img src={"/Vector.png"}></img>
-                </div>
+            <div id="navigation"><Link to={"/map"}><div id="icon1"><img src={"/Vector.png"}></img>
+            </div>
                 <div id="text"><p id="text1">Directions</p></div>
+            </Link>
             </div>
 
         </div>
