@@ -305,14 +305,15 @@ const HereMaps = () => {
       pixelRatio: window.devicePixelRatio || 1,
     });
     setMap(map);
-    window.addEventListener("resize", map.getViewPort().resize);
-    // const behavior = new window.H.mapevents.Behavior(
-    //   new window.H.mapevents.MapEvents(map)
-    // );
-
-    // console.log(behavior);
+    // initialize map behavior
+    new window.H.mapevents.Behavior(
+      new window.H.mapevents.MapEvents(map)
+    );
+    // create default ui
+    H.ui.UI.createDefault(map, defaultLayers);
+    window.addEventListener('resize', () => map.getViewPort().resize());
     return () => {
-      window.removeEventListener("resize", map.getViewPort().resize);
+      window.removeEventListener("resize", () => map.getViewPort().resize()  );
     };
   }, []);
 
