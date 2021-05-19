@@ -1,46 +1,39 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from './js/leaflet-custom';
-import { Map, TileLayer, useLeaflet, Marker } from 'react-leaflet';
-import './App.css';
+import { Map, TileLayer } from 'react-leaflet';
+import "./App.css";
 import 'leaflet/dist/leaflet.css';
 import 'esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css';
-//import places from './places.json';
 import "leaflet-geosearch/dist/geosearch.css"
 import "leaflet-geosearch/assets/css/leaflet.css"
-//import axios from "axios";
-//import { Series, Dataframes } from "pandas-js";
-//import { DataFrame } from 'pandas-js/dist/core';
-//import DataFrame from "dataframe-js";
 import Search from "./search.js"
-import "leaflet.idw/src/leaflet-idw";
-//import latlng from "react-leaflet"
-//import { latLng } from 'leaflet';
-import { BrowserRouter as Router, Redirect, Route, Link } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
+//import "leaflet.idw/src/leaflet-idw";
+import Vector from "../../assets/images/Vector.png";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
-// Importing images from locally stored assets to address a bug
-// in CodeSandbox: https://github.com/codesandbox/codesandbox-client/issues/3845
 
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: require('./images/marker-icon-2x.png'),
-    iconUrl: require('./images/marker-icon.png'),
-    shadowUrl: require('./images/marker-shadow.png')
+    iconRetinaUrl: require('../../assets/images/marker-icon-2x.png'),
+    iconUrl: require('../../assets/images/marker-icon.png'),
+    shadowUrl: require('../../assets/images/marker-shadow.png')
 });
+
 
 const token = "516b6b62876af81c27811d5b120aa26e1a34c43d";
 var lat1 = 28.086520, lat2 = 28.921631, long1 = 76.730347, long2 = 77.631226;
 const url = `https://api.waqi.info/map/bounds/?latlng=${lat1},${long1},${lat2},${long2}&token=${token}`
 
-let item;
 let userData
 
 let aqiGradient = {
     0: "#69B34C",
     50: "green",
     100: "yellow",
+    150: '#FFD700',
     200: "orange",
+    250: '#FF8C00',
     300: "red",
     400: "#FF2626",
     500: "#DD0000",
@@ -51,22 +44,6 @@ let aqiGradient = {
     1000: "black"
 };
 
-let aqiGradient1 = {
-    0.0: '#69B34C',
-    0.05: 'green',
-    0.1: 'yellow',
-    0.15: '#FFD700',
-    0.2: 'orange',
-    0.25: '#FF8C00',
-    0.3: 'red',
-    0.4: '#FF2626',
-    0.5: '#DD0000',
-    0.6: '#CD853F',
-    0.7: '#D2691E',
-    0.8: '#A0522D',
-    0.9: '#8B4513',
-    1.0: 'brown'
-};
 
 let IDWOptions = {
     // opacity  - the opacity of the IDW layer
@@ -90,16 +67,9 @@ let IDWOptions = {
 
 const Home = () => {
     const mapRef = useRef();
-    let rows = [], columns;
-
-    //console.log(obj[0].Lat);
-
-    //document.write(rows[0][2]);
-    //const df = new DataFrame(rows, columns = ['lat', 'lon', 'aqi', 'name']);
+    let rows = [];
     // const [timer, setTimer] = useState(null);
-    const [show, setshow] = useState(false);
-    const [counter, setCounter] = useState(0);
-    const timer = useRef(null);
+
 
 
     const fetchdata = async () => {
@@ -107,18 +77,14 @@ const Home = () => {
         const data = await response.json();
         userData = data.data;
 
-        //console.log(userData);
     }
 
-    let test1;
+
+
     useEffect(() => {
         const { current = {} } = mapRef;
         const { leafletElement: map } = current;
-
-
-        // if(!query) return;
-        test1 = fetchdata().then(() => {
-            // console.log(userData);
+        fetchdata().then(() => {
             for (let i in userData) {
                 if (!isNaN(userData[i].aqi)) {
                     rows.push([userData[i].lat, userData[i].lon, parseInt(userData[i].aqi)]);
@@ -126,16 +92,16 @@ const Home = () => {
             }
 
             if (!map) return;
-            console.log(rows);
-
-            var idw = L.idwLayer(rows, {
-                opacity: 0.6,
+            L.idwLayer(rows, {
+                opacity: 0.4,
                 // maxZoom: 18,
-                cellSize: 1,
+                cellSize: 12,
                 exp: 2,
                 max: 1000,
-                //station_range:10,
-                gradient: aqiGradient1,
+                maxVal: 1000,
+                minVal: 0,
+                station_range: 10,
+                gradient: aqiGradient,
             }).addTo(map);
             // idw.addTo(map);
             /*  for (let j in rows){
@@ -145,65 +111,78 @@ const Home = () => {
                     //L.idwMarker([parseFloat(rows[j][0]),parseFloat(rows[j][1])]).addTo(map);
                    //console.log(rows[j][0]);
                   };*/
-            let idwMarker = undefined;
-            let idwDisplay = undefined;
-            map.on('click',
-                function mapClickListen(event) {
-                    let pos = event.latlng;
-                    if (idwMarker) {
-                        idwDisplay.remove();
-                        idwMarker.setLatLng(pos);
-                    } else {
-                        idwMarker = new L.idwMarker(
-                            pos, {
-                            ranges: [1000],
-                            //dataOptions: [[2, 0.0]],
-                            p: 2,
-                            radius: 5,
-                            points: [rows]
-                        }).addTo(map);
-                    }
-                    idwDisplay = L.control.displayIDW(idwMarker.getIDW(), {
-                        position: "topleft"
-                    }).addTo(map);
-                    // close button function
-                    document.getElementById("idw-display-close-button").onclick = function (event) {
-                        // avoid click on the map again
-                        map.off('click', mapClickListen);
-                        idwMarker.remove();
-                        idwDisplay.remove();
-                        idwMarker = undefined;
-                        idwDisplay = undefined;
-                        // turn on the map click function
-                        setTimeout(() => {
-                            map.on('click', mapClickListen);
-                        }, 100);
-                    };
-                });
+            // console.log(rows);
+
 
             // L.marker(rows[0][0],rows[0][1]).addTo(map);
 
 
         })
-        // setInterval(test1,5000);
-        //window.setInterval(App,5000);
-        L.control.IDWLegend(aqiGradient, IDWOptions).addTo(map);
+        // const timeout = setTimeout(() => {
+        //     setTimer(fetchdata());
+        // }, 5000);
 
-    }, [])
+        let idwMarker = undefined;
+        let idwDisplay = undefined;
+        map.on('click',
+            function mapClickListen(event) {
+                let pos = event.latlng;
+                if (idwMarker) {
+                    idwDisplay.remove();
+                    idwMarker.setLatLng(pos);
+                } else {
+                    idwMarker = new L.idwMarker(
+                        pos, {
+                        ranges: [1000],
+                        //dataOptions: [[2, 0.0]],
+                        p: 2,
+                        radius: 5,
+                        points: [rows]
+                    }).addTo(map);
+                }
+                idwDisplay = L.control.displayIDW(idwMarker.getIDW(), {
+                    position: "topleft"
+                }).addTo(map);
+                // close button function
+                document.getElementById("idw-display-close-button").onclick = function (event) {
+                    // avoid click on the map again
+                    map.off('click', mapClickListen);
+                    idwMarker.remove();
+                    idwDisplay.remove();
+                    idwMarker = undefined;
+                    idwDisplay = undefined;
+                    // turn on the map click function
+                    setTimeout(() => {
+                        map.on('click', mapClickListen);
+                    }, 100);
+                };
+            });
+        // console.log(rows);
+
+        // clearTimeout(timeout);
+        L.control.IDWLegend(aqiGradient, IDWOptions).addTo(map);
+        /* timer = setTimer(() => {
+          setInterval(fetchdata());
+        }, 5000);*/
+        //window.setInterval(App,5000);
+        // setTimeout(map, 15000);
+
+
+    }, [rows])
 
 
     // console.log(rows);
 
     return (
         <div className="App">
-            <Map ref={mapRef} center={[28.7041, 77.1025]} zoom={9} maxZoom={9} minZoom={9} >
+            <Map ref={mapRef} center={[28.7041, 77.1025]} zoom={10} >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; <a href=&quot;https://www.openstreetmap.org/copyright&quot;>OpenStreetMap</a> contributors" />
                 <Search />
             </Map>
-            <div id="navigation"><Link to={"/map"}><div id="icon1"><img src={"/Vector.png"}></img>
-            </div>
-                <div id="text"><p id="text1">Directions</p></div>
-            </Link>
+            <div id="navigation">
+                <div id="icon1"><Link to="/map"><img src={Vector} alt="direction"></img></Link>
+                </div>
+                <div id="text"><Link to="/map"><p id="text1">Directions</p></Link></div>
             </div>
 
         </div>

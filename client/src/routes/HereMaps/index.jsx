@@ -8,13 +8,10 @@ import React, {
 } from "react";
 import styles from "./HereMaps.module.scss";
 import LOCATIONS from "./locations";
-import "./App.css";
 import Button from "@material-ui/core/Button";
-import { IconButton, InputAdornment } from "@material-ui/core";
-import { DateTimePicker, KeyboardDateTimePicker, MuiPickersUtilsProvider, } from "@material-ui/pickers";
+import { KeyboardDateTimePicker, MuiPickersUtilsProvider, } from "@material-ui/pickers";
 import DateMomentUtils from '@date-io/moment';
-import { Fade } from '@material-ui/core';
-import { BrowserRouter as Router, Redirect, Route, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 
 
@@ -28,8 +25,8 @@ const HereMaps = () => {
   const [showPm, setShowPm] = useState(true);
   const [currentRoute, setCurrentRoute] = useState(0);
   const [singleRoute, setSingleRoute] = useState(false);
-  const [afterMinutes, setAfterMinutes] = useState(0);
-  const [fetching, setFetching] = useState(false);
+  // const [afterMinutes, setAfterMinutes] = useState(0);
+  // const [fetching, setFetching] = useState(false);
   const mapObjects = useRef([]);
 
   const [places, setPlaces] = useState([]);
@@ -43,8 +40,8 @@ const HereMaps = () => {
 
   const wrapperRef = useRef(null);
   const wrapperRef1 = useRef(null);
-  const [origin, setOrigin] = useState(null);
-  const [dest, setDest] = useState(null);
+  const [origin, setOrigin] = useState("");
+  const [dest, setDest] = useState("");
   const [orv, setOriginv] = useState({ lat: null, lng: null });
   const [dsv, setDestv] = useState({ lat: null, lng: null });
   var aurl = "https://autocomplete.geocoder.ls.hereapi.com/6.2/suggest.json?query=";
@@ -253,7 +250,7 @@ const HereMaps = () => {
 
   const fetchAndAddRoutes = () => {
     if (!map) return;
-    setFetching(true);
+    // setFetching(true);
     const origin = orv;
     if (origin.lat == null || origin.lng == null)
       return;
@@ -275,7 +272,7 @@ const HereMaps = () => {
       .then((res) => res.json())
       .then((routes) => {
         setRoutes(routes);
-        setFetching(false);
+        // setFetching(false);
         setSingleRoute(false);
       })
       .catch((err) => {
@@ -283,8 +280,8 @@ const HereMaps = () => {
       });
   };
 
-  useEffect(fetchAndAddRoutes, [map, addMarkersToMap, afterMinutes, orv, dsv, selectedDate, clearMap]);
-  useEffect(updateMap, [routes, map, showPm, singleRoute, orv, dsv, clearMap]);
+  useEffect(fetchAndAddRoutes, [map, addMarkersToMap, orv, dsv, selectedDate, clearMap]);
+  useEffect(updateMap, [routes, map, addMarkersToMap, showPm, singleRoute, orv, dsv, clearMap]);
   useEffect(showSingleRoute, [
     routes,
     map,
@@ -292,6 +289,7 @@ const HereMaps = () => {
     singleRoute,
     currentRoute,
     orv, dsv,
+    addMarkersToMap,
     clearMap,
   ]);
   useLayoutEffect(() => {
@@ -308,9 +306,9 @@ const HereMaps = () => {
     });
     setMap(map);
     window.addEventListener("resize", map.getViewPort().resize);
-    const behavior = new window.H.mapevents.Behavior(
-      new window.H.mapevents.MapEvents(map)
-    );
+    // const behavior = new window.H.mapevents.Behavior(
+    //   new window.H.mapevents.MapEvents(map)
+    // );
 
     // console.log(behavior);
     return () => {
@@ -322,14 +320,14 @@ const HereMaps = () => {
     <>
       <div className="page-header">
         {/* <div>{inval}</div> */}
-        <div id="appbar">
+        <div id={styles.appbar}>
           <div ref={wrapperRef}>
-            <div class="input">
-              <div class="origin">
-                <Link to="/"><i class="material-icons icon">&#xe5c4;</i></Link>
-                <div class="input5">
-                  <i class="material-icons icon1">&#xe55c;</i>
-                  <input id="input1" autocomplete="off"
+            <div className={styles.input}>
+              <div className={styles.origin}>
+                <Link to="/"><i className={`material-icons ${styles.icon}`}>&#xe5c4;</i></Link>
+                <div className={styles.input5}>
+                  <i className={`material-icons ${styles.icon1}`}>&#xe55c;</i>
+                  <input id={styles.input1} autoComplete="off"
                     type="text"
                     onClick={() => setDisplay(!display)}
                     placeholder="Choose Starting point"
@@ -340,11 +338,11 @@ const HereMaps = () => {
               </div>
 
               {display && (
-                <div className="autoContainer">
+                <div className={styles.autoContainer}>
                   {places.map((value, i) => {
                     return (
                       <div
-                        className="option"
+                        className={styles.option}
                         onClick={() => updateOriginValue(value)}
                         key={i}
                         tabIndex="0"
@@ -358,13 +356,13 @@ const HereMaps = () => {
             </div>
           </div>
 
-          <div class="clearfix"></div>
+          <div className={styles.clearfix}></div>
 
           <div ref={wrapperRef1}>
-            <div class="input">
-              <div class="input6">
-                <i class="material-icons icon1">&#xe568;</i>
-                <input id="input2" autocomplete="off"
+            <div className={styles.input}>
+              <div className={styles.input6}>
+                <i className={`material-icons ${styles.icon1}`}>&#xe568;</i>
+                <input id={styles.input2} autoComplete="off"
                   type="text"
                   onClick={() => setDisplay1(true)}
                   placeholder="Choose Destination"
@@ -374,11 +372,11 @@ const HereMaps = () => {
               </div>
             </div>
             {display1 && (
-              <div className="autoContainer">
+              <div className={styles.autoContainer}>
                 {places.map((value, i) => {
                   return (
                     <div
-                      className="option"
+                      className={styles.option}
                       onClick={() => updateDestValue(value)}
                       key={i}
                       tabIndex="0"
@@ -391,10 +389,10 @@ const HereMaps = () => {
             )}
           </div>
 
-          <div class="clearfix"></div>
+          <div className={styles.clearfix}></div>
 
-          <div id="bottom3">
-            <Button id="PMV"
+          <div id={styles.bottom3}>
+            <Button id={styles.PMV}
               style={{ textTransform: 'none', backgroundColor: bcol, color: tcol, }}
               onClick={() => {
                 return setShowPm(() => {
@@ -406,7 +404,7 @@ const HereMaps = () => {
               PM 2.5
           </Button>
 
-            <Button id="CV"
+            <Button id={styles.CV}
               style={{ textTransform: 'none', backgroundColor: bcold, color: tcold, }}
               // color={col1}
               onClick={() => {
@@ -422,9 +420,9 @@ const HereMaps = () => {
             {/* <br /> */}
 
             {/* <br /> */}
-            <div id="timemenu">
+            <div id={styles.timemenu}>
               <MuiPickersUtilsProvider utils={DateMomentUtils}>
-                <KeyboardDateTimePicker id="pickdateandtime"
+                <KeyboardDateTimePicker id={styles.pickdateandtime}
                   value={null}
                   onChange={handleDateChange}
                   label=""
@@ -437,38 +435,38 @@ const HereMaps = () => {
               </MuiPickersUtilsProvider>
             </div>
 
-            <div class="clearfix"></div>
+            <div className={styles.clearfix}></div>
           </div>
 
-          <div class="clearfix"></div>
+          <div className={styles.clearfix}></div>
         </div>
 
         <div id="demo-map" ref={mapRef} className={styles.hereMaps}></div>
 
-        <div id="bottombar">
-          <i class='fas prevb'
+        <div id={styles.bottombar}>
+          <i className={`fas ${styles.prevb}`}
             onClick={() => {
               setInv(((inval - 1) % 7 + 7) % 7);
               setRdisplay(true);
             }
             }
           >&#xf137;</i>
-          <div id="bottombart">
-            <span id="bshow">
+          <div id={styles.bottombart}>
+            <span id={styles.bshow}>
               {routes ? (
                 <>
-                  {inval == 0 ? "Showing all routes" : `Showing Route ${inval}`}
+                  {inval === 0 ? "Showing all routes" : `Showing Route ${inval}`}
                 </>
               ) : "No Routes available"}
             </span>
 
             <br />
 
-            <span id="bshow6">
+            <span id={styles.bshow6}>
               {routes ? "6 Routes available" : null}
             </span>
           </div>
-          <i class='fas nextb'
+          <i className={`fas ${styles.nextb}`}
             onClick={() => {
               setInv((inval + 1) % 7);
               setRdisplay(true);
@@ -482,13 +480,14 @@ const HereMaps = () => {
               {
                 rdisplay ? (
                   <>
-                    {inval == 0 ?
-                      < div >
+                    {inval === 0 ?
+                      <>
                         {setSingleRoute(false)}
-                      </div>
-                      : <div>
-                        {setSingleRoute(true), setCurrentRoute(inval - 1)}
-                      </div>
+                      </>
+                      : <>
+                        {setSingleRoute(true)}
+                        {setCurrentRoute(inval - 1)}
+                      </>
                     }
                     {setRdisplay(false)}
                   </>
