@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import L from './js/leaflet-custom';
 import { Map, TileLayer } from 'react-leaflet';
 import "./App.css";
@@ -10,14 +10,14 @@ import Search from "./search.js"
 import { Link } from 'react-router-dom';
 //import "leaflet.idw/src/leaflet-idw";
 import Vector from "../../assets/images/Vector.png";
-
+import iconRetinaUrl from "assets/images/marker-icon-2x.png";
+import iconUrl from '../../assets/images/marker-icon.png';
+import shadowUrl from '../../assets/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 
 
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: require('../../assets/images/marker-icon-2x.png'),
-    iconUrl: require('../../assets/images/marker-icon.png'),
-    shadowUrl: require('../../assets/images/marker-shadow.png')
+    iconRetinaUrl,iconUrl,shadowUrl
 });
 
 
