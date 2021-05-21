@@ -25,6 +25,7 @@ const HereMaps = () => {
   const [showPm, setShowPm] = useState(true);
   const [currentRoute, setCurrentRoute] = useState(0);
   const [singleRoute, setSingleRoute] = useState(false);
+  const [totalroutes, setTotalRoutes] = useState(1);
   // const [afterMinutes, setAfterMinutes] = useState(0);
   // const [fetching, setFetching] = useState(false);
   const mapObjects = useRef([]);
@@ -84,10 +85,18 @@ const HereMaps = () => {
 
   const addMarkersToMap = useCallback((map, locations = []) => {
     if (!map) return;
+    var group = new H.map.Group();
     locations.forEach((location) => {
       const locationMarker = new H.map.Marker(location);
-      map.addObject(locationMarker);
-      mapObjects.current = [...mapObjects.current, locationMarker];
+      group.addObject(locationMarker);
+      // map.addObject(locationMarker);
+      // mapObjects.current = [...mapObjects.current, locationMarker];
+    });
+
+    mapObjects.current = [...mapObjects.current, group];
+    map.addObject(group);
+    map.getViewModel().setLookAtData({
+      bounds: group.getBoundingBox()
     });
   }, []);
 
@@ -111,7 +120,7 @@ const HereMaps = () => {
   async function getLattLong(location_id) {
     const response = await fetch(burl + location_id + curl + apik + apikey);
     const data = await response.json();
-
+    setInv(0);
     // console.log(data);
     setOriginv({ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] });
     // addMarkersToMap(map, [{ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] }]);
@@ -120,7 +129,7 @@ const HereMaps = () => {
   async function getLattLongd(location_id) {
     const response = await fetch(burl + location_id + curl + apik + apikey);
     const data = await response.json();
-
+    setInv(0);
     // console.log(data);
     setDestv({ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] });
     // addMarkersToMap(map, [{ lat: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["latitude"], lng: data["response"]["view"][0]["result"][0]["location"]["displayPosition"]["longitude"] }]);
@@ -166,6 +175,15 @@ const HereMaps = () => {
     setColt('#666666');
   }
 
+  function setindexval(inc) {
+    if (routes.length !== 0) {
+      if (inc === false)
+        setInv(((inval - 1) % totalroutes + totalroutes) % totalroutes);
+      else
+        setInv((inval + 1) % totalroutes);
+    }
+  }
+
   const addPolylineToMap = (
     map,
     linestring,
@@ -203,6 +221,7 @@ const HereMaps = () => {
     mapObjects.current = [...mapObjects.current, routeLine];
     map.addObjects([routeLine]);
   };
+
   const clearMap = useCallback(() => {
     const filteredValues = mapObjects.current.filter((value) =>
       map.getObjects().includes(value)
@@ -216,6 +235,8 @@ const HereMaps = () => {
     if (!map || !singleRoute) return;
     clearMap();
     addMarkersToMap(map, [orv, dsv]);
+    if (routes.length === 0)
+      return;
     routes[currentRoute].forEach((section) => {
       let linestring = H.geo.LineString.fromFlexiblePolyline(section.polyline);
       addPolylineToMap(
@@ -232,6 +253,9 @@ const HereMaps = () => {
     if (!routes || !map) return;
     clearMap();
     addMarkersToMap(map, [orv, dsv]);
+
+    if (routes.length === 0)
+      return;
     routes.forEach((route) => {
       route.forEach((section) => {
         let linestring = H.geo.LineString.fromFlexiblePolyline(
@@ -262,16 +286,18 @@ const HereMaps = () => {
     let departureTime = selectedDate;
     // departureTime.setMinutes(departureTime.getMinutes() + afterMinutes);
     // console.log(departureTime)
+    clearMap();
     const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng
       }&dest=${dest.lat},${dest.lng
       }&departureTime=${departureTime.toISOString()}`;
 
-    clearMap();
+
     addMarkersToMap(map, [origin, dest]); // plot origin and destination on map
     fetch(url)
       .then((res) => res.json())
       .then((routes) => {
         setRoutes(routes);
+        setTotalRoutes(routes.length + 1);
         // setFetching(false);
         setSingleRoute(false);
       })
@@ -313,7 +339,7 @@ const HereMaps = () => {
     H.ui.UI.createDefault(map, defaultLayers);
     window.addEventListener('resize', () => map.getViewPort().resize());
     return () => {
-      window.removeEventListener("resize", () => map.getViewPort().resize()  );
+      window.removeEventListener("resize", () => map.getViewPort().resize());
     };
   }, []);
 
@@ -447,7 +473,7 @@ const HereMaps = () => {
         <div id={styles.bottombar}>
           <i className={`fas ${styles.prevb}`}
             onClick={() => {
-              setInv(((inval - 1) % 7 + 7) % 7);
+              setindexval(false);
               setRdisplay(true);
             }
             }
@@ -464,19 +490,19 @@ const HereMaps = () => {
             <br />
 
             <span id={styles.bshow6}>
-              {routes ? "6 Routes available" : null}
+              {routes ? `${totalroutes - 1} Routes available` : null}
             </span>
           </div>
           <i className={`fas ${styles.nextb}`}
             onClick={() => {
-              setInv((inval + 1) % 7);
+              setindexval(true);
               setRdisplay(true);
             }
 
             }
           >&#xf138;</i>
 
-          {routes ? (
+          {(totalroutes !== 1) ? (
             <>
               {
                 rdisplay ? (
