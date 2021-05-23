@@ -12,6 +12,9 @@ import Button from "@material-ui/core/Button";
 import { KeyboardDateTimePicker, MuiPickersUtilsProvider, } from "@material-ui/pickers";
 import DateMomentUtils from '@date-io/moment';
 import { Link } from 'react-router-dom';
+import * as FaIcons from 'react-icons/fa';
+import * as AiIcons from 'react-icons/ai';
+import SideBar from './Sidebar';
 
 
 
@@ -22,7 +25,7 @@ const HereMaps = () => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
   const [routes, setRoutes] = useState(null);
-  const [showPm, setShowPm] = useState(true);
+  const [showPm, setShowPm] = useState(false);
   const [currentRoute, setCurrentRoute] = useState(0);
   const [singleRoute, setSingleRoute] = useState(false);
   const [totalroutes, setTotalRoutes] = useState(1);
@@ -233,10 +236,11 @@ const HereMaps = () => {
 
   const showSingleRoute = () => {
     if (!map || !singleRoute) return;
-    clearMap();
-    addMarkersToMap(map, [orv, dsv]);
     if (routes.length === 0)
       return;
+    clearMap();
+    addMarkersToMap(map, [orv, dsv]);
+
     routes[currentRoute].forEach((section) => {
       let linestring = H.geo.LineString.fromFlexiblePolyline(section.polyline);
       addPolylineToMap(
@@ -251,11 +255,12 @@ const HereMaps = () => {
 
   const updateMap = () => {
     if (!routes || !map) return;
+    if (routes.length === 0)
+      return;
     clearMap();
     addMarkersToMap(map, [orv, dsv]);
 
-    if (routes.length === 0)
-      return;
+
     routes.forEach((route) => {
       route.forEach((section) => {
         let linestring = H.geo.LineString.fromFlexiblePolyline(
@@ -306,15 +311,15 @@ const HereMaps = () => {
       });
   };
 
-  useEffect(fetchAndAddRoutes, [map, addMarkersToMap, orv, dsv, selectedDate, clearMap]);
-  useEffect(updateMap, [routes, map, addMarkersToMap, showPm, singleRoute, orv, dsv, clearMap]);
+  // useEffect(fetchAndAddRoutes, [map, addMarkersToMap, orv, dsv, selectedDate, clearMap]);
+  useEffect(updateMap, [routes, map, addMarkersToMap, showPm, singleRoute, clearMap]);
   useEffect(showSingleRoute, [
     routes,
     map,
     showPm,
     singleRoute,
     currentRoute,
-    orv, dsv,
+    // orv, dsv,
     addMarkersToMap,
     clearMap,
   ]);
@@ -338,6 +343,12 @@ const HereMaps = () => {
     // create default ui
     H.ui.UI.createDefault(map, defaultLayers);
     window.addEventListener('resize', () => map.getViewPort().resize());
+
+    // var logContainer = document.createElement('button');
+    // logContainer.className = `${styles.log}`;
+    // logContainer.innerHTML = 'Legends';
+    // map.getElement().appendChild(logContainer);
+
     return () => {
       window.removeEventListener("resize", () => map.getViewPort().resize());
     };
@@ -346,12 +357,13 @@ const HereMaps = () => {
   return (
     <>
       <div className="page-header">
-        {/* <div>{inval}</div> */}
         <div id={styles.appbar}>
           <div ref={wrapperRef}>
             <div className={styles.input}>
               <div className={styles.origin}>
-                <Link to="/"><i className={`material-icons ${styles.icon}`}>&#xe5c4;</i></Link>
+                {/* <Link to="#" id={styles.icon}><FaIcons.FaBars
+                  onClick={showSidebar}/></Link> */}
+                <SideBar routes={routes} />
                 <div className={styles.input5}>
                   <i className={`material-icons ${styles.icon1}`}>&#xe55c;</i>
                   <input id={styles.input1} autoComplete="off"
@@ -419,29 +431,29 @@ const HereMaps = () => {
           <div className={styles.clearfix}></div>
 
           <div id={styles.bottom3}>
-            <Button id={styles.PMV}
+            <Button id={styles.CMV}
               style={{ textTransform: 'none', backgroundColor: bcol, color: tcol, }}
               onClick={() => {
                 return setShowPm(() => {
                   customo();
-                  return true;
-                });
-              }}
-            >
-              PM 2.5
-          </Button>
-
-            <Button id={styles.CV}
-              style={{ textTransform: 'none', backgroundColor: bcold, color: tcold, }}
-              // color={col1}
-              onClick={() => {
-                customd();
-                return setShowPm(() => {
                   return false;
                 });
               }}
             >
               Congestion
+          </Button>
+
+            <Button id={styles.PMV}
+              style={{ textTransform: 'none', backgroundColor: bcold, color: tcold, }}
+              // color={col1}
+              onClick={() => {
+                customd();
+                return setShowPm(() => {
+                  return true;
+                });
+              }}
+            >
+              PM 2.5
           </Button>
 
             {/* <br /> */}
@@ -453,6 +465,9 @@ const HereMaps = () => {
                   value={null}
                   onChange={handleDateChange}
                   label=""
+                  InputProps={{
+                    disableUnderline: true,
+                  }}
                   inputVariant="standard"
                   onError={console.log}
                   ampm={false}
@@ -460,6 +475,12 @@ const HereMaps = () => {
                   format="yyyy/MM/DD HH:mm"
                 />
               </MuiPickersUtilsProvider>
+              <button className={styles.go} onClick={() => {
+                setInv(0);
+                fetchAndAddRoutes();
+                // updateMap();
+                // showSingleRoute();
+              }}>Go</button>
             </div>
 
             <div className={styles.clearfix}></div>
@@ -501,6 +522,24 @@ const HereMaps = () => {
 
             }
           >&#xf138;</i>
+
+          {/* <div id={sidebar ? styles.sideMenuActive : styles.sideMenu}>
+            <div id={styles.sidebarwrap}>
+              <Link to='#' id={styles.NavIcon}><AiIcons.AiOutlineClose onClick={showSidebar} /></Link>
+
+              {totalroutes === 1 ?
+                (
+                  <>
+                    <div id={styles.noroutes}>Either No routes Available or You have not selected origin,dest,and date vale</div>
+                  </>)
+                : (
+                  <>
+                    {routes.map((item, index) => {
+                      return <SideBar item={item} key={index} routeno={index} />
+                    })}
+                  </>)}
+            </div>
+          </div> */}
 
           {(totalroutes !== 1) ? (
             <>
