@@ -11,9 +11,9 @@ import LOCATIONS from "./locations";
 import Button from "@material-ui/core/Button";
 import { KeyboardDateTimePicker, MuiPickersUtilsProvider, } from "@material-ui/pickers";
 import DateMomentUtils from '@date-io/moment';
-import { Link } from 'react-router-dom';
-import * as FaIcons from 'react-icons/fa';
-import * as AiIcons from 'react-icons/ai';
+// import { Link } from 'react-router-dom';
+// import * as FaIcons from 'react-icons/fa';
+// import * as AiIcons from 'react-icons/ai';
 import SideBar from './Sidebar';
 
 
@@ -30,17 +30,17 @@ const HereMaps = () => {
   const [singleRoute, setSingleRoute] = useState(false);
   const [totalroutes, setTotalRoutes] = useState(1);
   // const [afterMinutes, setAfterMinutes] = useState(0);
-  // const [fetching, setFetching] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const mapObjects = useRef([]);
 
   const [places, setPlaces] = useState([]);
   const [display, setDisplay] = useState(false);
   const [display1, setDisplay1] = useState(false);
-  const [bcol, setCol] = useState('#E8F4F5');
-  const [tcol, setColt] = useState('#108898');
+  var bcol = '#E8F4F5';
+  var tcol = '#108898';
 
-  const [bcold, setCold] = useState('rgb(255,255,255)');
-  const [tcold, setColtd] = useState('#666666');
+  var bcold = 'rgb(255,255,255)';
+  var tcold = '#666666';
 
   const wrapperRef = useRef(null);
   const wrapperRef1 = useRef(null);
@@ -164,20 +164,6 @@ const HereMaps = () => {
     setDisplay1(false);
   };
 
-  function customo() {
-    setCol('#E8F4F5');
-    setColt('#108898');
-    setCold('rgb(255,255,255)');
-    setColtd('#666666');
-  }
-
-  function customd() {
-    setCold('#E8F4F5');
-    setColtd('#108898');
-    setCol('rgb(255,255,255)');
-    setColt('#666666');
-  }
-
   function setindexval(inc) {
     if (routes.length !== 0) {
       if (inc === false)
@@ -217,9 +203,11 @@ const HereMaps = () => {
       routeLine = new H.map.Group();
       routeLine.addObjects([routeOutline, routeArrows]);
     } else {
-      routeLine = new H.map.Polyline(linestring, {
+      const routeLine1 = new H.map.Polyline(linestring, {
         style: { strokeColor: color, lineWidth },
       });
+      routeLine = new H.map.Group();
+      routeLine.addObjects([routeLine1]);
     }
     mapObjects.current = [...mapObjects.current, routeLine];
     map.addObjects([routeLine]);
@@ -291,6 +279,9 @@ const HereMaps = () => {
     let departureTime = selectedDate;
     // departureTime.setMinutes(departureTime.getMinutes() + afterMinutes);
     // console.log(departureTime)
+    setRoutes([]);
+    setFetching(true);
+    setShowPm(false);
     clearMap();
     const url = `${BASE_URL}/gettraveldata/origin=${origin.lat},${origin.lng
       }&dest=${dest.lat},${dest.lng
@@ -303,15 +294,18 @@ const HereMaps = () => {
       .then((routes) => {
         setRoutes(routes);
         setTotalRoutes(routes.length + 1);
-        // setFetching(false);
+        setFetching(false);
         setSingleRoute(false);
       })
       .catch((err) => {
         console.log(err);
+        setFetching(false);
       });
+    // setFetching(false);
   };
 
   // useEffect(fetchAndAddRoutes, [map, addMarkersToMap, orv, dsv, selectedDate, clearMap]);
+
   useEffect(updateMap, [routes, map, addMarkersToMap, showPm, singleRoute, clearMap]);
   useEffect(showSingleRoute, [
     routes,
@@ -319,7 +313,6 @@ const HereMaps = () => {
     showPm,
     singleRoute,
     currentRoute,
-    // orv, dsv,
     addMarkersToMap,
     clearMap,
   ]);
@@ -432,10 +425,9 @@ const HereMaps = () => {
 
           <div id={styles.bottom3}>
             <Button id={styles.CMV}
-              style={{ textTransform: 'none', backgroundColor: bcol, color: tcol, }}
+              style={{ textTransform: 'none', backgroundColor: (!showPm ? bcol : bcold), color: (!showPm ? tcol : tcold), }}
               onClick={() => {
                 return setShowPm(() => {
-                  customo();
                   return false;
                 });
               }}
@@ -444,10 +436,9 @@ const HereMaps = () => {
           </Button>
 
             <Button id={styles.PMV}
-              style={{ textTransform: 'none', backgroundColor: bcold, color: tcold, }}
+              style={{ textTransform: 'none', backgroundColor: (!showPm ? bcold : bcol), color: (!showPm ? tcold : tcol), }}
               // color={col1}
               onClick={() => {
-                customd();
                 return setShowPm(() => {
                   return true;
                 });
@@ -501,17 +492,24 @@ const HereMaps = () => {
           >&#xf137;</i>
           <div id={styles.bottombart}>
             <span id={styles.bshow}>
-              {routes ? (
+              {fetching ? (
                 <>
-                  {inval === 0 ? "Showing all routes" : `Showing Route ${inval}`}
-                </>
-              ) : "No Routes available"}
+                  {"Fetching Routes..."}
+                </>)
+                : (
+                  <>
+                    {routes ? (
+                      <>
+                        {inval === 0 ? "Showing all routes" : `Showing Route ${inval}`}
+                      </>
+                    ) : "No Routes available"}
+                  </>)}
             </span>
 
             <br />
 
             <span id={styles.bshow6}>
-              {routes ? `${totalroutes - 1} Routes available` : null}
+              {(routes && !fetching) ? `${totalroutes - 1} Routes available` : null}
             </span>
           </div>
           <i className={`fas ${styles.nextb}`}
@@ -522,24 +520,6 @@ const HereMaps = () => {
 
             }
           >&#xf138;</i>
-
-          {/* <div id={sidebar ? styles.sideMenuActive : styles.sideMenu}>
-            <div id={styles.sidebarwrap}>
-              <Link to='#' id={styles.NavIcon}><AiIcons.AiOutlineClose onClick={showSidebar} /></Link>
-
-              {totalroutes === 1 ?
-                (
-                  <>
-                    <div id={styles.noroutes}>Either No routes Available or You have not selected origin,dest,and date vale</div>
-                  </>)
-                : (
-                  <>
-                    {routes.map((item, index) => {
-                      return <SideBar item={item} key={index} routeno={index} />
-                    })}
-                  </>)}
-            </div>
-          </div> */}
 
           {(totalroutes !== 1) ? (
             <>

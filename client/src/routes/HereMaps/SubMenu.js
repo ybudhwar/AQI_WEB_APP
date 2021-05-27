@@ -1,5 +1,4 @@
 import React, { useState, useEffect, } from 'react';
-import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import styles from "./HereMaps.module.scss";
 
@@ -8,7 +7,7 @@ import styles from "./HereMaps.module.scss";
 
 const SidebarLink = styled.div`
   display: flex;
-  color: #e1e9fc;
+  color: #242424;
   justify-content: space-between;
   align-items: center;
   padding: 20px;
@@ -19,7 +18,7 @@ const SidebarLink = styled.div`
   border-bottom:1px solid;
 
   &:hover {
-    background: #252831;
+    background: #B8B8B8;
     border-left: 4px solid #632ce4;
     cursor: pointer;
   }
@@ -30,19 +29,19 @@ const SidebarLabel = styled.span`
 `;
 
 const DropdownLink = styled.div`
-  background: #414757;
+  background: #A8A8A8;
   height: 75px;
   padding-left: 3rem;
   display: block;
-  border-bottom:1px solid white;
+  border-bottom:1px solid #242424;
   justify-content: space-between;
   align-items: center;
   text-decoration: none;
-  color: #f5f5f5;
+  color: #242424;
   font-size: 18px;
 
   &:hover {
-    background: #632ce4;
+    background: #888888;
     cursor: pointer;
   }
 `;
@@ -105,7 +104,7 @@ const SubMenu = ({ item, routeno }) => {
     setTravelTime(ttime);
     setTravelDist(tdist);
     setTmode(mode);
-    console.log("render");
+    // console.log("render");
   }
 
   useEffect(getData, [item]);
