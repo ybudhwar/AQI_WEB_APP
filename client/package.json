@@ -18,6 +18,7 @@
     "leaflet": "^1.6.0",
     "leaflet-geosearch": "^3.3.2",
     "leaflet.idw": "0.0.1",
+    "leaflet-searchbox": "^1.0.6",
     "moment": "^2.29.1",
     "node-sass": "^5.0.0",
     "pandas-js": "^0.2.4",
