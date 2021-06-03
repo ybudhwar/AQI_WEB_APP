@@ -87,7 +87,7 @@ L.Control.DisplayIDW = L.Control.extend({
       </div>
       
       
-        <a id="idw-display-close-button" class="leaflet-popup-close-button" href="#close">×</a>
+        <a id="idw-display-close-button" class="leaflet-popup-close-button" >×</a>
       </div>`;
     return container;
   }
@@ -417,9 +417,9 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
     return this;
   },
 
-  remove: function () {
-    map.remove();
-  },
+  // remove: function () {
+  //   map.remove();
+  // },
 
   _initCanvas: function () {
     var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-idwmap-layer leaflet-layer');

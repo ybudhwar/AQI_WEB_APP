@@ -8,7 +8,7 @@ function App() {
       <Router>
         <Switch>
           <Route exact path="/" render={() => <Home />} />
-          <Route exact path="/heremap" render={() => <HereMaps />} />
+          <Route exact path="/map" render={() => <HereMaps />} />
           <Route path="*" render={() => <Redirect to="/" />} />
         </Switch>
       </Router>

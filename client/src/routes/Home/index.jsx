@@ -234,7 +234,7 @@ const Home = () => {
                 <Search />
             </Map>
             <div id="navigation">
-                <div id="icon1"><Link to="/heremap"><img src={Vector} alt="direction"></img></Link>
+                <div id="icon1"><Link to="/map"><img src={Vector} alt="direction"></img></Link>
                 </div>
                 <div><Link to="/map"><p id="text1">Directions</p></Link></div>
             </div>
