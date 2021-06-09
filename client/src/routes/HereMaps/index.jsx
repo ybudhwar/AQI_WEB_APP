@@ -53,10 +53,13 @@ const HereMaps = () => {
   var curl = "&jsonattributes=1&gen=9";
   var apik = "&apiKey=";
 
-  const [selectedDate, handleDateChange] = useState(null);
+  const [selectedDate, handleDateChange] = useState(new Date());
 
   const [inval, setInv] = useState(0);
   const [rdisplay, setRdisplay] = useState(true);
+
+  const [timear, setTimeArr] = useState(null);
+  const [distar, setDistArr] = useState(null);
 
   useEffect(() => {
     window.addEventListener("mousedown", handleClickOutside);
@@ -171,6 +174,29 @@ const HereMaps = () => {
       else
         setInv((inval + 1) % totalroutes);
     }
+  }
+
+  function getTimeData() {
+    let tar = [];
+    let dar = [];
+    if (!routes || routes.length === 0)
+      return;
+    routes.forEach((route) => {
+      let totaltime = 0;
+      let totaldist = 0;
+      route.forEach((section) => {
+        totaltime += section.travelTime;
+        totaldist += section.distance;
+      });
+      totaltime = totaltime / 60;
+      totaldist = totaldist / 1000;
+
+      tar.push(totaltime.toFixed(1));
+      dar.push(totaldist.toFixed(1));
+    });
+
+    setTimeArr(tar);
+    setDistArr(dar);
   }
 
   const addPolylineToMap = (
@@ -316,6 +342,8 @@ const HereMaps = () => {
     addMarkersToMap,
     clearMap,
   ]);
+  useEffect(getTimeData, [routes]);
+
   useLayoutEffect(() => {
     if (!mapRef.current) return;
 
@@ -500,7 +528,13 @@ const HereMaps = () => {
                   <>
                     {routes ? (
                       <>
-                        {inval === 0 ? "Showing all routes" : `Showing Route ${inval}`}
+                        {inval === 0 ? ("Showing all routes") : (
+                          <>
+                            {`Showing Route ${inval}`}
+                            <br />
+                            {<span id={styles.bshowtime}>{`Time: ${timear[inval - 1]} Min, Dist: ${distar[inval - 1]} Km`}</span>}
+                          </>
+                        )}
                       </>
                     ) : "No Routes available"}
                   </>)}
